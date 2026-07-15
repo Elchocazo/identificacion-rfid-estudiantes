@@ -16,8 +16,13 @@ export async function POST(request: Request) {
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      // Tarjeta no registrada, podríamos guardar un log si quisiéramos
-      return NextResponse.json({ error: 'Tarjeta no registrada' }, { status: 404 });
+      // Tarjeta no registrada: la guardamos en registros pendientes para que el profesor pueda asignarla
+      const pendingRef = collection(db, 'pending_registrations');
+      await addDoc(pendingRef, {
+        uid,
+        timestamp: serverTimestamp()
+      });
+      return NextResponse.json({ error: 'Tarjeta no registrada. Lista para ser asignada en el panel.' }, { status: 404 });
     }
 
     const studentDoc = querySnapshot.docs[0];
