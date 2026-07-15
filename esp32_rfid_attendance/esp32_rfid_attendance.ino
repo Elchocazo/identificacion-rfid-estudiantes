@@ -2,124 +2,123 @@
 #include <MFRC522.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 
-// Pines para ESP32 (ajústalos si usaste otros)
-#define SS_PIN 5
-#define RST_PIN 22
-#define BUZZER_PIN 2 // Pin D2 para el buzzer
+// ---------------------------------------------------------
+// CONFIGURACIÓN DEL COLEGIO (MULTI-TENANCY)
+// ---------------------------------------------------------
+// RECUERDA: Cambia esto por el código exacto del colegio que creaste en el panel SuperAdmin
+const String SCHOOL_ID = "CHMD"; 
 
-MFRC522 rfid(SS_PIN, RST_PIN);
-
-// --- CONFIGURACIÓN DE TU RED WI-FI ---
+// ---------------------------------------------------------
+// CONFIGURACIÓN DE RED Y API
+// ---------------------------------------------------------
 const char* ssid = "MANUEL";
 const char* password = "36274528";
+const String apiUrl = "https://identificacion-rfid-estudiantes.vercel.app/api/attendance";
 
-// --- URL DE TU SERVIDOR EN LA NUBE ---
-const char* serverName = "https://identificacion-rfid-estudiantes.vercel.app/api/attendance"; 
+// ---------------------------------------------------------
+// CONFIGURACIÓN DEL LECTOR RFID (Pines para ESP32)
+// ---------------------------------------------------------
+#define RST_PIN 22
+#define SS_PIN 21
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+// Pines para LEDs y Buzzer (Opcional, déjalos así si no tienes conectados LEDs)
+#define LED_GREEN 2
+#define LED_RED 4
+#define BUZZER 15
 
 void setup() {
   Serial.begin(115200);
   SPI.begin();
-  rfid.PCD_Init();
+  mfrc522.PCD_Init();
   
-  pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW); // Asegurarnos de que inicie apagado
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
   
-  Serial.println();
-  Serial.print("Conectando a la red: ");
-  Serial.println(ssid);
-  
+  // Conectar a WiFi
+  Serial.println("Conectando a WiFi...");
   WiFi.begin(ssid, password);
-  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  
-  Serial.println("\n¡Wi-Fi conectado con éxito!");
-  Serial.print("Dirección IP asignada: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("-----------------------------------");
-  Serial.println("Lector en la puerta LISTO. Acerca una tarjeta...");
+  Serial.println("\nConectado a WiFi!");
+  Serial.println("Lector RFID listo. Esperando tarjeta...");
 }
 
 void loop() {
-  // Revisamos si hay una tarjeta cerca
-  if (!rfid.PICC_IsNewCardPresent()) {
+  // Revisar si hay una nueva tarjeta presente
+  if (!mfrc522.PICC_IsNewCardPresent()) {
     return;
   }
-  // Revisamos si podemos leerla
-  if (!rfid.PICC_ReadCardSerial()) {
+  // Leer el serial de la tarjeta
+  if (!mfrc522.PICC_ReadCardSerial()) {
     return;
   }
 
-  // Extraemos el código UID de la tarjeta
-  Serial.print("UID leído: ");
-  String codigoTarjeta = "";
-  for (byte i = 0; i < rfid.uid.size; i++) {
-    codigoTarjeta += String(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    codigoTarjeta += String(rfid.uid.uidByte[i], HEX);
+  // Convertir el UID a String (Formato: "A1 B2 C3 D4")
+  String uidString = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    uidString += String(mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
+    uidString += String(mfrc522.uid.uidByte[i], HEX);
+    if (i != mfrc522.uid.size - 1) uidString += " ";
   }
+  uidString.toUpperCase();
+
+  Serial.println("Tarjeta detectada: " + uidString);
   
-  codigoTarjeta.toUpperCase();
-  codigoTarjeta.trim();
-  Serial.println(codigoTarjeta);
+  // Enviar a la API
+  sendToAPI(uidString);
+  
+  // Detener lectura para no enviar múltiples peticiones por la misma tarjeta
+  mfrc522.PICC_HaltA();
+  delay(1000); 
+}
 
-  // Enviamos el código a nuestra página web para que ella decida qué hacer
-  if(WiFi.status() == WL_CONNECTED){
-    WiFiClientSecure client;
-    client.setInsecure(); // Necesario para conexiones HTTPS a Vercel
-    
+void sendToAPI(String uid) {
+  if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.setTimeout(15000); // Darle tiempo al servidor
-    
-    http.begin(client, serverName);
+    http.begin(apiUrl);
     http.addHeader("Content-Type", "application/json");
+
+    // Construir el JSON incluyendo el UID y el SCHOOL_ID
+    StaticJsonDocument<200> doc;
+    doc["uid"] = uid;
+    doc["schoolId"] = SCHOOL_ID; // <--- AQUÍ SE ENVÍA EL CÓDIGO DEL COLEGIO
     
-    // Armamos el pequeño paquete JSON
-    String jsonPayload = "{\"uid\": \"" + codigoTarjeta + "\"}";
+    String requestBody;
+    serializeJson(doc, requestBody);
     
-    Serial.println("Enviando datos a la nube...");
-    int httpResponseCode = http.POST(jsonPayload);
+    Serial.println("Enviando datos a la nube: " + requestBody);
+    
+    int httpResponseCode = http.POST(requestBody);
     
     if (httpResponseCode > 0) {
-      Serial.print("Respuesta HTTP: ");
-      Serial.println(httpResponseCode);
       String response = http.getString();
-      Serial.println(response); // Aquí verás si se marcó asistencia o si se guardó como pendiente
+      Serial.println("Código HTTP: " + String(httpResponseCode));
+      Serial.println("Respuesta: " + response);
       
-      if (httpResponseCode == 200) {
-        // Asistencia registrada correctamente: Bip Bip
-        digitalWrite(BUZZER_PIN, HIGH);
-        delay(100);
-        digitalWrite(BUZZER_PIN, LOW);
-        delay(100);
-        digitalWrite(BUZZER_PIN, HIGH);
-        delay(100);
-        digitalWrite(BUZZER_PIN, LOW);
-      } else {
-        // Error o tarjeta no registrada (404, 500, etc): Bip Largo
-        digitalWrite(BUZZER_PIN, HIGH);
-        delay(800);
-        digitalWrite(BUZZER_PIN, LOW);
+      if (httpResponseCode == 200 || httpResponseCode == 201) {
+        // Asistencia Exitosa
+        digitalWrite(LED_GREEN, HIGH);
+        tone(BUZZER, 1000, 200); // Tono agudo (éxito)
+        delay(500);
+        digitalWrite(LED_GREEN, LOW);
+      } else if (httpResponseCode == 404) {
+        // Tarjeta No Registrada (Pendiente)
+        digitalWrite(LED_RED, HIGH);
+        tone(BUZZER, 500, 500); // Tono grave (alerta)
+        delay(1000);
+        digitalWrite(LED_RED, LOW);
       }
-      
     } else {
-      Serial.print("Error de red: ");
-      Serial.println(httpResponseCode);
-      // Fallo de internet: Bip Largo
-      digitalWrite(BUZZER_PIN, HIGH);
-      delay(800);
-      digitalWrite(BUZZER_PIN, LOW);
+      Serial.println("Error en la petición HTTP. Código de error: " + String(httpResponseCode));
     }
-    
     http.end();
   } else {
-    Serial.println("Alerta: Sin conexión a Wi-Fi.");
+    Serial.println("Error: WiFi desconectado.");
   }
-
-  // Pausamos el lector 3 segundos para que no lea la misma tarjeta 100 veces por accidente
-  rfid.PICC_HaltA();
-  delay(3000); 
 }
