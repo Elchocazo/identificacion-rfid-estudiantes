@@ -110,12 +110,12 @@ export default function TeacherDashboard() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
           background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '4rem 1rem 2rem 1rem', overflowY: 'auto'
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'
         }}>
           <div className="glass-panel" style={{ 
-            width: '100%', maxWidth: '650px', 
+            width: '100%', maxWidth: '650px', maxHeight: 'calc(100vh - 4rem)', overflowY: 'auto',
             background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', marginBottom: '2rem'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
