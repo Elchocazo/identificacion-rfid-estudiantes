@@ -119,15 +119,14 @@ export default function TeacherDashboard() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
-              <button onClick={() => setShowRegisterForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
+              <button onClick={() => {
+                setShowRegisterForm(false);
+                setRegData({ uid: '', pendingId: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
+              }} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
             </div>
             
             <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--secondary)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-              <strong style={{ color: 'var(--secondary)' }}>Paso 1:</strong> Pasa una tarjeta nueva por el lector para detectarla.
-              <br/>
-              <span style={{ color: '#cbd5e1', fontSize: '0.9rem', marginTop: '0.5rem', display: 'block' }}>
-                Tarjetas pendientes detectadas: {pendingCards.length > 0 ? <strong style={{ color: 'white' }}>{pendingCards.map(p => p.uid).join(', ')}</strong> : 'Ninguna'}
-              </span>
+              <strong style={{ color: 'var(--secondary)' }}>Paso 1:</strong> Pasa una tarjeta nueva por el lector para autollenar el campo UID.
             </div>
 
             <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
