@@ -110,13 +110,16 @@ export default function TeacherDashboard() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
           background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: '50px', paddingBottom: '50px'
+          overflowY: 'auto'
         }}>
-          <div className="glass-panel" style={{ 
-            width: '100%', maxWidth: '650px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto',
-            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          <div style={{
+            minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 1rem'
           }}>
+            <div className="glass-panel" style={{ 
+              width: '100%', maxWidth: '650px', flexShrink: 0,
+              background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
               <button onClick={() => setShowRegisterForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
@@ -175,6 +178,7 @@ export default function TeacherDashboard() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
