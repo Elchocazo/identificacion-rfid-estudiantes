@@ -304,11 +304,15 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#d1fae5', color: '#059669', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#059669' }}></span>
-                      {att.type.toUpperCase()}
+                    <div style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.3rem', 
+                      background: att.isLate ? '#ffe4e6' : '#d1fae5', 
+                      color: att.isLate ? '#e11d48' : '#059669', 
+                      padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' 
+                    }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: att.isLate ? '#e11d48' : '#059669' }}></span>
+                      {att.isLate ? 'LLEGADA TARDE' : att.type.toUpperCase()}
                     </div>
-                    {att.isLate && <span style={{ background: '#ffe4e6', color: '#e11d48', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>Llegada Tarde</span>}
                   </div>
                 </div>
               ))}

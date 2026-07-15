@@ -81,8 +81,15 @@ export default function TeacherDashboard() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
-                    <span style={{ color: att.type === 'Entrada' ? 'var(--secondary)' : '#ef4444', fontWeight: 'bold' }}>{att.type}</span>
-                    {att.isLate && <span style={{ background: '#ffe4e6', color: '#e11d48', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Llegada Tarde</span>}
+                    <div style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.3rem', 
+                      background: att.isLate ? '#ffe4e6' : (att.type === 'Entrada' ? '#d1fae5' : '#fee2e2'), 
+                      color: att.isLate ? '#e11d48' : (att.type === 'Entrada' ? '#059669' : '#dc2626'), 
+                      padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' 
+                    }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: att.isLate ? '#e11d48' : (att.type === 'Entrada' ? '#059669' : '#dc2626') }}></span>
+                      {att.isLate ? 'LLEGADA TARDE' : att.type.toUpperCase()}
+                    </div>
                   </div>
                 </div>
               </div>
