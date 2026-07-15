@@ -110,7 +110,7 @@ export default function TeacherDashboard() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
           background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflowY: 'auto'
+          display: 'flex', justifyContent: 'center', alignItems: 'flex-start'
         }}>
           <div className="glass-panel" style={{ 
             width: '95%', maxWidth: '750px',
