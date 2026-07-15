@@ -132,7 +132,12 @@ export default function TeacherDashboard() {
             <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>UID de Tarjeta (Autollenado)</label>
-                <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold', letterSpacing: '1px' }} />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold', letterSpacing: '1px', flex: 1 }} />
+                  <button type="button" onClick={() => setRegData({...regData, uid: '', pendingId: ''})} className="btn-secondary" style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Limpiar y esperar nueva tarjeta">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  </button>
+                </div>
               </div>
               
               <div>
