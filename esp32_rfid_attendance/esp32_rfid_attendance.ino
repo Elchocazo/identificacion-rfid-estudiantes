@@ -7,6 +7,7 @@
 // Pines para ESP32 (ajústalos si usaste otros)
 #define SS_PIN 5
 #define RST_PIN 22
+#define BUZZER_PIN 2 // Pin D2 para el buzzer
 
 MFRC522 rfid(SS_PIN, RST_PIN);
 
@@ -21,6 +22,9 @@ void setup() {
   Serial.begin(115200);
   SPI.begin();
   rfid.PCD_Init();
+  
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW); // Asegurarnos de que inicie apagado
   
   Serial.println();
   Serial.print("Conectando a la red: ");
@@ -84,9 +88,30 @@ void loop() {
       Serial.println(httpResponseCode);
       String response = http.getString();
       Serial.println(response); // Aquí verás si se marcó asistencia o si se guardó como pendiente
+      
+      if (httpResponseCode == 200) {
+        // Asistencia registrada correctamente: Bip Bip
+        digitalWrite(BUZZER_PIN, HIGH);
+        delay(100);
+        digitalWrite(BUZZER_PIN, LOW);
+        delay(100);
+        digitalWrite(BUZZER_PIN, HIGH);
+        delay(100);
+        digitalWrite(BUZZER_PIN, LOW);
+      } else {
+        // Error o tarjeta no registrada (404, 500, etc): Bip Largo
+        digitalWrite(BUZZER_PIN, HIGH);
+        delay(800);
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+      
     } else {
       Serial.print("Error de red: ");
       Serial.println(httpResponseCode);
+      // Fallo de internet: Bip Largo
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(800);
+      digitalWrite(BUZZER_PIN, LOW);
     }
     
     http.end();
