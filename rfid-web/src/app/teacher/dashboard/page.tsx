@@ -175,7 +175,7 @@ export default function TeacherDashboard() {
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
               <button onClick={() => {
                 setShowRegisterForm(false);
-                setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
+                setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: '' });
               }} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
             </div>
             
