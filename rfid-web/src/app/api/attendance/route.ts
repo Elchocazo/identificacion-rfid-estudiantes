@@ -41,26 +41,10 @@ export async function POST(request: Request) {
     );
     const attSnapshot = await getDocs(attQuery);
     
-    // Simplificación: si el número de registros hoy es par, es Entrada, si es impar es Salida.
-    // Filtramos los de hoy en JavaScript para evitar error de índice compuesto en Firebase.
+    // Simplificación: Eliminamos el concepto de "Salida" por petición del usuario.
+    // Todas las lecturas serán "Entrada" para evitar el problema de que a los estudiantes se les olvide.
+    // (En una versión final podríamos limitar a 1 entrada por día, pero por ahora lo dejamos libre para que puedas probar el WhatsApp escaneando 3 veces seguidas).
     let type = 'Entrada';
-    if (!attSnapshot.empty) {
-      const records = attSnapshot.docs
-        .map(d => d.data())
-        .filter(d => {
-          const time = d.timestamp?.toMillis ? d.timestamp.toMillis() : 0;
-          return time >= startOfDay.getTime();
-        })
-        .sort((a, b) => {
-          const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-          const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-          return timeB - timeA;
-        });
-
-      if (records.length > 0 && records[0].type === 'Entrada') {
-        type = 'Salida';
-      }
-    }
 
     // 3. Registrar la asistencia
     await addDoc(attendanceRef, {
