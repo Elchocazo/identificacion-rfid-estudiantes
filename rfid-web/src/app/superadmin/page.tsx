@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, deleteDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function SuperAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -11,6 +12,12 @@ export default function SuperAdminPage() {
   const [schools, setSchools] = useState<any[]>([]);
   const [newSchoolName, setNewSchoolName] = useState('');
   const [newSchoolCode, setNewSchoolCode] = useState('');
+
+  // Estados para crear docente
+  const [teacherId, setTeacherId] = useState('');
+  const [teacherPassword, setTeacherPassword] = useState('');
+  const [teacherSchoolCode, setTeacherSchoolCode] = useState('');
+  const [isCreatingTeacher, setIsCreatingTeacher] = useState(false);
 
   const SUPER_PASSWORD = '1061768991';
 
@@ -80,6 +87,31 @@ export default function SuperAdminPage() {
         console.error(err);
         alert('Error al eliminar.');
       }
+    }
+  };
+
+  const handleCreateTeacher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teacherId || !teacherPassword || !teacherSchoolCode) return;
+    
+    setIsCreatingTeacher(true);
+    try {
+      const auth = getAuth();
+      const email = `${teacherId}@${teacherSchoolCode.toLowerCase()}.teacher.school.com`;
+      await createUserWithEmailAndPassword(auth, email, teacherPassword);
+      alert(`Cuenta de profesor creada exitosamente para el colegio ${teacherSchoolCode}. Ya puede iniciar sesión.`);
+      setTeacherId('');
+      setTeacherPassword('');
+      setTeacherSchoolCode('');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/email-already-in-use') {
+        alert('Ese profesor ya tiene una cuenta en este colegio. Intenta iniciar sesión con sus credenciales.');
+      } else {
+        alert('Error al crear la cuenta: ' + err.message);
+      }
+    } finally {
+      setIsCreatingTeacher(false);
     }
   };
 
@@ -156,6 +188,51 @@ export default function SuperAdminPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Formulario de Crear Cuenta Profesor */}
+        <div className="glass-panel" style={{ flex: '1 1 300px', height: 'fit-content' }}>
+          <h2>Crear Cuenta de Profesor/Rector</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Crea el primer usuario administrador para un colegio.</p>
+          <form onSubmit={handleCreateTeacher} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Código del Colegio</label>
+              <select 
+                className="input-field" 
+                value={teacherSchoolCode} 
+                onChange={e => setTeacherSchoolCode(e.target.value)}
+                required
+              >
+                <option value="">Selecciona un colegio...</option>
+                {schools.map(s => <option key={s.id} value={s.code}>{s.name} ({s.code})</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Identificación (Login)</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={teacherId} 
+                onChange={e => setTeacherId(e.target.value)}
+                placeholder="Ej. 1061768991"
+                required 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Contraseña</label>
+              <input 
+                type="password" 
+                className="input-field" 
+                value={teacherPassword} 
+                onChange={e => setTeacherPassword(e.target.value)}
+                placeholder="********"
+                required 
+              />
+            </div>
+            <button type="submit" className="btn-primary" disabled={isCreatingTeacher} style={{ background: 'var(--primary)', color: 'white' }}>
+              {isCreatingTeacher ? 'Creando...' : 'Crear Cuenta Docente'}
+            </button>
+          </form>
         </div>
       </div>
     </div>
