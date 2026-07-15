@@ -46,8 +46,12 @@ export async function POST(request: Request) {
     // También podríamos checar si el último es Entrada o Salida.
     let type = 'Entrada';
     if (!attSnapshot.empty) {
-      // Ordenamos en JS para simplificar los índices de Firestore
-      const records = attSnapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
+      // Ordenamos en JS usando toMillis() para objetos Timestamp de Firestore
+      const records = attSnapshot.docs.map(d => d.data()).sort((a, b) => {
+        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+        return timeB - timeA;
+      });
       if (records.length > 0 && records[0].type === 'Entrada') {
         type = 'Salida';
       }
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
       uid,
       type,
       timestamp: serverTimestamp(),
-      studentName: studentData.name
+      studentName: `${studentData.firstName} ${studentData.lastName}`
     });
 
     // 4. Evolución de la Mascota (Mecánica de recompensas)
@@ -85,7 +89,7 @@ export async function POST(request: Request) {
       success: true, 
       message: 'Asistencia registrada', 
       type, 
-      student: studentData.name,
+      student: `${studentData.firstName} ${studentData.lastName}`,
       petLevel
     }, { status: 200 });
 

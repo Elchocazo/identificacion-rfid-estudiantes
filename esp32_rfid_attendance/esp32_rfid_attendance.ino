@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
+// Pines para ESP32 (ajústalos si usaste otros)
 #define SS_PIN 5
 #define RST_PIN 22
 
@@ -13,8 +14,7 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 const char* ssid = "MANUEL";
 const char* password = "36274528";
 
-
-// --- CONFIGURACIÓN DEL SERVIDOR (VERCEL) ---
+// --- URL DE TU SERVIDOR EN LA NUBE ---
 const char* serverName = "https://identificacion-rfid-estudiantes.vercel.app/api/attendance"; 
 
 void setup() {
@@ -33,23 +33,24 @@ void setup() {
     Serial.print(".");
   }
   
-  Serial.println("");
-  Serial.println("¡Wi-Fi conectado con éxito!");
+  Serial.println("\n¡Wi-Fi conectado con éxito!");
   Serial.print("Dirección IP asignada: ");
   Serial.println(WiFi.localIP());
   Serial.println("-----------------------------------");
-  Serial.println("Lector listo. Acerca una tarjeta...");
+  Serial.println("Lector en la puerta LISTO. Acerca una tarjeta...");
 }
 
 void loop() {
+  // Revisamos si hay una tarjeta cerca
   if (!rfid.PICC_IsNewCardPresent()) {
     return;
   }
-  
+  // Revisamos si podemos leerla
   if (!rfid.PICC_ReadCardSerial()) {
     return;
   }
 
+  // Extraemos el código UID de la tarjeta
   Serial.print("UID leído: ");
   String codigoTarjeta = "";
   for (byte i = 0; i < rfid.uid.size; i++) {
@@ -58,46 +59,42 @@ void loop() {
   }
   
   codigoTarjeta.toUpperCase();
-  codigoTarjeta.trim(); // Quitamos espacios al inicio o final por seguridad
+  codigoTarjeta.trim();
   Serial.println(codigoTarjeta);
 
-  // Enviar a la base de datos a través de nuestro servidor
+  // Enviamos el código a nuestra página web para que ella decida qué hacer
   if(WiFi.status() == WL_CONNECTED){
     WiFiClientSecure client;
-    client.setInsecure(); // No validar el certificado SSL de Vercel
+    client.setInsecure(); // Necesario para conexiones HTTPS a Vercel
     
     HTTPClient http;
-    http.setTimeout(20000); // 20 segundos de tiempo de espera (para evitar Error -11 por el arranque en frío de Vercel)
+    http.setTimeout(15000); // Darle tiempo al servidor
     
-    // Configuramos la URL
     http.begin(client, serverName);
-    
-    // Indicamos que enviaremos JSON
     http.addHeader("Content-Type", "application/json");
     
-    // Creamos el JSON con el UID
+    // Armamos el pequeño paquete JSON
     String jsonPayload = "{\"uid\": \"" + codigoTarjeta + "\"}";
     
-    Serial.println("Enviando datos al servidor...");
+    Serial.println("Enviando datos a la nube...");
     int httpResponseCode = http.POST(jsonPayload);
     
     if (httpResponseCode > 0) {
       Serial.print("Respuesta HTTP: ");
       Serial.println(httpResponseCode);
       String response = http.getString();
-      Serial.println(response);
+      Serial.println(response); // Aquí verás si se marcó asistencia o si se guardó como pendiente
     } else {
-      Serial.print("Error enviando POST: ");
+      Serial.print("Error de red: ");
       Serial.println(httpResponseCode);
     }
     
-    // Liberar recursos
     http.end();
   } else {
-    Serial.println("Error: Desconectado del Wi-Fi.");
+    Serial.println("Alerta: Sin conexión a Wi-Fi.");
   }
 
-  // Detenemos la lectura actual y esperamos unos segundos antes de volver a leer
+  // Pausamos el lector 3 segundos para que no lea la misma tarjeta 100 veces por accidente
   rfid.PICC_HaltA();
-  delay(2000); 
+  delay(3000); 
 }
