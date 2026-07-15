@@ -9,10 +9,6 @@ export default function TeacherDashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [pendingCards, setPendingCards] = useState<any[]>([]);
   
-  // Para el formulario de notas
-  const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [noteContent, setNoteContent] = useState('');
-
   // Para el registro de estudiantes
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [regData, setRegData] = useState({
@@ -51,25 +47,6 @@ export default function TeacherDashboard() {
       unsubPending();
     };
   }, []);
-
-  const handleAddNote = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedStudentId || !noteContent) return;
-
-    try {
-      await addDoc(collection(db, 'notes'), {
-        studentId: selectedStudentId,
-        content: noteContent,
-        timestamp: serverTimestamp(),
-        teacherId: 'current_teacher'
-      });
-      setNoteContent('');
-      alert('Nota agregada con éxito');
-    } catch (error) {
-      console.error(error);
-      alert('Error agregando nota');
-    }
-  };
 
   const handleRegisterStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,25 +183,28 @@ export default function TeacherDashboard() {
           </div>
         </section>
 
-        {/* Panel para agregar notas */}
+        {/* Panel Lista de Estudiantes */}
         <section className="glass-panel" style={{ height: 'fit-content' }}>
-          <h2 style={{ marginBottom: '1rem' }}>Anotaciones de Convivencia</h2>
-          <form onSubmit={handleAddNote} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Estudiante</label>
-              <select className="input-field" value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} required>
-                <option value="">-- Seleccionar --</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.idNumber})</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nota / Observación</label>
-              <textarea className="input-field" rows={4} value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder="Escribe el reporte o anotación..." required />
-            </div>
-            <button type="submit" className="btn-primary">Guardar Nota</button>
-          </form>
+          <h2 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Lista de Estudiantes</h2>
+          <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {students.map(s => (
+              <div 
+                key={s.id} 
+                onClick={() => window.location.href = `/teacher/student/${s.id}`}
+                style={{ 
+                  padding: '1rem', background: '#f8fafc', borderRadius: '8px', 
+                  border: '1px solid var(--border)', cursor: 'pointer',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <strong style={{ display: 'block', color: 'var(--text-main)' }}>{s.firstName} {s.lastName}</strong>
+                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>ID: {s.id}</span>
+                </div>
+                <span style={{ color: 'var(--primary)' }}>Ver Perfil ➔</span>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </div>

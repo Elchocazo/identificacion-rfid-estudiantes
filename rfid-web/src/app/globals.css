@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --secondary: #10B981;
-  --background: #0f172a;
-  --surface: rgba(30, 41, 59, 0.7);
-  --surface-hover: rgba(30, 41, 59, 0.9);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.1);
+  --primary: #0ea5e9;       /* Azul celeste */
+  --primary-hover: #0284c7; /* Azul más oscuro para hover */
+  --secondary: #38bdf8;     /* Celeste claro */
+  --background: #f8fafc;    /* Blanco/Gris muy claro */
+  --surface: #ffffff;       /* Blanco puro para paneles */
+  --surface-hover: #f1f5f9; /* Gris muy claro para hover */
+  --text-main: #0f172a;     /* Texto principal oscuro */
+  --text-muted: #64748b;    /* Texto secundario gris */
+  --border: #e2e8f0;        /* Borde gris sutil */
   --glass-blur: 12px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -24,9 +24,6 @@
 body {
   font-family: 'Outfit', sans-serif;
   background: var(--background);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
   color: var(--text-main);
   min-height: 100vh;
   line-height: 1.5;
@@ -60,7 +57,7 @@ button {
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), #818cf8);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -68,12 +65,12 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
 }
 
 .btn-secondary {
@@ -89,14 +86,14 @@ button {
 
 .btn-secondary:hover {
   background: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary);
 }
 
 /* Inputs */
 .input-field {
   width: 100%;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-main);
@@ -108,7 +105,7 @@ button {
 .input-field:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
 }
 
 /* Layout Utilities */
@@ -125,13 +122,13 @@ button {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #fff, #94a3b8);
+  background: linear-gradient(135deg, var(--primary), var(--text-main));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-primary {
-  color: #818cf8;
+  color: var(--primary);
 }
 
 /* Animations */
