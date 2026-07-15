@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, limit, doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 
