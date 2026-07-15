@@ -113,19 +113,19 @@ export default function TeacherDashboard() {
           overflowY: 'auto'
         }}>
           <div style={{
-            minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 1rem'
+            minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 1rem'
           }}>
             <div className="glass-panel" style={{ 
-              width: '100%', maxWidth: '650px', flexShrink: 0,
+              width: '100%', maxWidth: '750px', flexShrink: 0,
               background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem'
             }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
               <button onClick={() => setShowRegisterForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
             </div>
             
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--secondary)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--secondary)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
               <strong style={{ color: 'var(--secondary)' }}>Paso 1:</strong> Pasa una tarjeta nueva por el lector para detectarla.
               <br/>
               <span style={{ color: '#cbd5e1', fontSize: '0.9rem', marginTop: '0.5rem', display: 'block' }}>
@@ -133,7 +133,7 @@ export default function TeacherDashboard() {
               </span>
             </div>
 
-            <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>UID de Tarjeta (Autollenado)</label>
                 <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold', letterSpacing: '1px' }} />
@@ -156,8 +156,8 @@ export default function TeacherDashboard() {
                 <input type="url" className="input-field" value={regData.photoUrl} onChange={e => setRegData({...regData, photoUrl: e.target.value})} placeholder="https://..." />
               </div>
 
-              <div style={{ gridColumn: '1 / -1', margin: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
-              <h3 style={{ gridColumn: '1 / -1', color: 'var(--text-main)', margin: 0 }}>Datos del Acudiente / Padre</h3>
+              <div style={{ gridColumn: '1 / -1', margin: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
+              <h3 style={{ gridColumn: '1 / -1', color: 'var(--text-main)', margin: 0, fontSize: '1.1rem' }}>Datos del Acudiente / Padre</h3>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombre del Padre</label>
@@ -172,8 +172,8 @@ export default function TeacherDashboard() {
                 <input type="text" className="input-field" value={regData.parentId} onChange={e => setRegData({...regData, parentId: e.target.value})} required placeholder="Ej. 10203040" />
               </div>
 
-              <div style={{ gridColumn: '1 / -1', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} disabled={!regData.uid || isRegistering}>
+              <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                <button type="submit" className="btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }} disabled={!regData.uid || isRegistering}>
                   {isRegistering ? 'Registrando Estudiante...' : 'Finalizar Registro'}
                 </button>
               </div>
