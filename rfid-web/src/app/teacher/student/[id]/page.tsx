@@ -1,10 +1,12 @@
 'use client';
 
 import StudentProfile from '@/components/StudentProfile';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
-export default function TeacherStudentProfile({ params }: { params: { id: string } }) {
+export default function TeacherStudentProfile() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
@@ -12,7 +14,7 @@ export default function TeacherStudentProfile({ params }: { params: { id: string
         <button className="btn-secondary" onClick={() => router.push('/teacher/dashboard')}>← Volver al Panel</button>
         <button className="btn-secondary" onClick={() => router.push('/')}>Cerrar Sesión</button>
       </div>
-      <StudentProfile studentId={params.id} isAdmin={true} />
+      {id && <StudentProfile studentId={id} isAdmin={true} />}
     </div>
   );
 }
