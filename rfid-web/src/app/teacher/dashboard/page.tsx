@@ -264,7 +264,10 @@ export default function TeacherDashboard() {
                       Grado: {att.studentGrade || 'No asignado'} • {att.timestamp?.toDate ? att.timestamp.toDate().toLocaleTimeString() : '...'}
                     </span>
                   </div>
-                  <span style={{ color: att.type === 'Entrada' ? 'var(--secondary)' : '#ef4444', fontWeight: 'bold' }}>{att.type}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                    <span style={{ color: att.type === 'Entrada' ? 'var(--secondary)' : '#ef4444', fontWeight: 'bold' }}>{att.type}</span>
+                    {att.isLate && <span style={{ background: '#ffe4e6', color: '#e11d48', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Llegada Tarde</span>}
+                  </div>
                 </div>
               </div>
             ))}
