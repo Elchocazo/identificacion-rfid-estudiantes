@@ -2,24 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, doc, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 export default function TeacherDashboard() {
+  const router = useRouter();
   const [attendances, setAttendances] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
-  const [pendingCards, setPendingCards] = useState<any[]>([]);
-  
-  // Para el registro de estudiantes
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-  const [regData, setRegData] = useState({
-    uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: ''
-  });
-  const [isRegistering, setIsRegistering] = useState(false);
 
-  // Configuraciones globales
-  const [showSettingsForm, setShowSettingsForm] = useState(false);
+  // Configuraciones globales para el header
   const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
     // Escuchar Asistencias en tiempo real
@@ -33,17 +25,6 @@ export default function TeacherDashboard() {
     const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setStudents(data);
-    });
-
-    // Escuchar Tarjetas Pendientes
-    const qPending = query(collection(db, 'pending_registrations'), orderBy('timestamp', 'desc'), limit(5));
-    const unsubPending = onSnapshot(qPending, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-      setPendingCards(data);
-      // Autollenar el formulario si está abierto y llega una tarjeta
-      if (data.length > 0) {
-        setRegData(prev => prev.uid === '' ? { ...prev, uid: data[0].uid, pendingId: data[0].id } : prev);
-      }
     });
 
     // Escuchar Configuración Global
@@ -63,48 +44,9 @@ export default function TeacherDashboard() {
     return () => {
       unsubAttend();
       unsubStudents();
-      unsubPending();
       unsubSettings();
     };
   }, []);
-
-  const handleRegisterStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsRegistering(true);
-    try {
-      const res = await fetch('/api/students/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(regData)
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('¡Estudiante registrado! El padre puede iniciar sesión con Identificación: ' + regData.parentId + ' y Contraseña: ' + data.parentPassword);
-        setShowRegisterForm(false);
-        setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: '' });
-      } else {
-        alert('Error: ' + data.error);
-      }
-    } catch (error) {
-      alert('Error de red al registrar');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
-  const handleSaveSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingSettings(true);
-    try {
-      await setDoc(doc(db, 'settings', 'general'), settings, { merge: true });
-      setShowSettingsForm(false);
-      alert('¡Configuración guardada exitosamente!');
-    } catch (e) {
-      alert('Error guardando la configuración');
-    } finally {
-      setIsSavingSettings(false);
-    }
-  };
 
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 0' }}>
@@ -114,137 +56,11 @@ export default function TeacherDashboard() {
           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{settings.schoolName} - Periodo {settings.currentPeriod}</span>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn-secondary" onClick={() => setShowSettingsForm(true)} title="Configuración">⚙️</button>
-          <button className="btn-primary" onClick={() => setShowRegisterForm(true)}>➕ Agregar Estudiante</button>
+          <button className="btn-secondary" onClick={() => router.push('/teacher/settings')} title="Configuración">⚙️</button>
+          <button className="btn-primary" onClick={() => router.push('/teacher/register')}>➕ Agregar Estudiante</button>
           <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
         </div>
       </header>
-
-      {/* MODAL DE CONFIGURACION */}
-      {showSettingsForm && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div className="glass-panel" style={{ 
-            width: '95%', maxWidth: '500px',
-            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Configuración Global</h2>
-              <button onClick={() => setShowSettingsForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
-            </div>
-            <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombre del Colegio</label>
-                <input type="text" className="input-field" value={settings.schoolName} onChange={e => setSettings({...settings, schoolName: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Periodo Académico Actual</label>
-                <select className="input-field" value={settings.currentPeriod} onChange={e => setSettings({...settings, currentPeriod: Number(e.target.value)})} style={{ background: '#0f172a' }}>
-                  <option value={1}>Periodo 1</option>
-                  <option value={2}>Periodo 2</option>
-                  <option value={3}>Periodo 3</option>
-                  <option value={4}>Periodo 4</option>
-                </select>
-                <small style={{ display: 'block', color: 'var(--text-muted)', marginTop: '0.5rem' }}>* Al cambiar de periodo, las faltas de los estudiantes comienzan desde 0 para el nuevo periodo.</small>
-              </div>
-              <button type="submit" className="btn-primary" disabled={isSavingSettings} style={{ marginTop: '1rem' }}>
-                {isSavingSettings ? 'Guardando...' : 'Guardar Configuración'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE REGISTRO */}
-      {showRegisterForm && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'flex-start'
-        }}>
-          <div className="glass-panel" style={{ 
-            width: '95%', maxWidth: '750px',
-            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem', marginTop: '85px', marginBottom: '15px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
-              <button onClick={() => {
-                setShowRegisterForm(false);
-                setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: '' });
-              }} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
-            </div>
-            
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--secondary)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-              <strong style={{ color: 'var(--secondary)' }}>Paso 1:</strong> Pasa una tarjeta nueva por el lector para autollenar el campo UID.
-            </div>
-
-            <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>UID de Tarjeta (Autollenado)</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold', letterSpacing: '1px', flex: 1 }} />
-                  <button type="button" onClick={() => setRegData({...regData, uid: '', pendingId: ''})} className="btn-secondary" style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Limpiar y esperar nueva tarjeta">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  </button>
-                </div>
-              </div>
-              
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Número de Identidad</label>
-                <input type="text" className="input-field" value={regData.idNumber} onChange={e => setRegData({...regData, idNumber: e.target.value})} required placeholder="Ej. 100200300" />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Grado / Curso</label>
-                <input type="text" className="input-field" value={regData.grade} onChange={e => setRegData({...regData, grade: e.target.value})} required placeholder="Ej. Quinto, 10A, etc." />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombres</label>
-                <input type="text" className="input-field" value={regData.firstName} onChange={e => setRegData({...regData, firstName: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Apellidos</label>
-                <input type="text" className="input-field" value={regData.lastName} onChange={e => setRegData({...regData, lastName: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Fecha de Nacimiento</label>
-                <input type="date" className="input-field" value={regData.birthday} onChange={e => setRegData({...regData, birthday: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Foto (URL opcional)</label>
-                <input type="url" className="input-field" value={regData.photoUrl} onChange={e => setRegData({...regData, photoUrl: e.target.value})} placeholder="https://..." />
-              </div>
-
-              <div style={{ gridColumn: '1 / -1', margin: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
-              <h3 style={{ gridColumn: '1 / -1', color: 'var(--text-main)', margin: 0, fontSize: '1.1rem' }}>Datos del Acudiente / Padre</h3>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombre del Padre</label>
-                <input type="text" className="input-field" value={regData.parentName} onChange={e => setRegData({...regData, parentName: e.target.value})} required />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Teléfono</label>
-                <input type="tel" className="input-field" value={regData.parentPhone} onChange={e => setRegData({...regData, parentPhone: e.target.value})} required />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Número de Identificación <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>(Usado para el login)</span></label>
-                <input type="text" className="input-field" value={regData.parentId} onChange={e => setRegData({...regData, parentId: e.target.value})} required placeholder="Ej. 10203040" />
-              </div>
-
-              <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                <button type="submit" className="btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }} disabled={!regData.uid || isRegistering}>
-                  {isRegistering ? 'Registrando Estudiante...' : 'Finalizar Registro'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         {/* Feed de Asistencia */}
