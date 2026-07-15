@@ -225,7 +225,11 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
           </div>
           <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
             <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>IDENTIFICACIÓN:</span> 
-            <span style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.idNumber || student.id}</span>
+            <span style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.idNumber}</span>
+          </div>
+          <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', paddingTop: '0.5rem' }}>
+            <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>GRADO:</span> 
+            <span style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.grade || 'No asignado'}</span>
           </div>
           <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
             <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>ACUDIENTE:</span> 
@@ -288,7 +292,10 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
                   <div key={att.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.firstName} {student.lastName}</strong>
-                      <span className="text-muted" style={{ fontWeight: 'bold', color: att.type === 'Entrada' ? 'var(--secondary)' : 'var(--primary)' }}>{att.type}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <span className="text-muted" style={{ fontWeight: 'bold', color: att.type === 'Entrada' ? 'var(--secondary)' : 'var(--primary)' }}>{att.type}</span>
+                        {att.isLate && <span style={{ background: '#fecdd3', color: '#e11d48', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>Llegada Tarde</span>}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                       <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{att.timestamp?.toDate ? att.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}</strong>

@@ -62,6 +62,7 @@ export async function POST(request: Request) {
       type: 'Entrada',
       timestamp: serverTimestamp(),
       studentName: `${studentData.firstName} ${studentData.lastName}`,
+      studentGrade: studentData.grade || '',
       period: currentPeriod,
       isLate: isLate
     });

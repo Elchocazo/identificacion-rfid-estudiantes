@@ -16,7 +16,8 @@ export async function POST(request: Request) {
       parentName, 
       parentId, 
       pendingId,
-      idNumber
+      idNumber,
+      grade
     } = data;
 
     if (!uid || !parentId) {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
       name: `${firstName} ${lastName}`,
       firstName,
       lastName,
+      grade,
       birthday,
       photoUrl: photoUrl || 'https://via.placeholder.com/150', // placeholder si no hay foto
       parentPhone,

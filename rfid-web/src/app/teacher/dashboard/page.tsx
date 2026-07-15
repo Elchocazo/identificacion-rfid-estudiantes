@@ -12,7 +12,7 @@ export default function TeacherDashboard() {
   // Para el registro de estudiantes
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [regData, setRegData] = useState({
-    uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: ''
+    uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: ''
   });
   const [isRegistering, setIsRegistering] = useState(false);
 
@@ -81,7 +81,7 @@ export default function TeacherDashboard() {
       if (data.success) {
         alert('¡Estudiante registrado! El padre puede iniciar sesión con Identificación: ' + regData.parentId + ' y Contraseña: ' + data.parentPassword);
         setShowRegisterForm(false);
-        setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
+        setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '', grade: '' });
       } else {
         alert('Error: ' + data.error);
       }
@@ -198,6 +198,10 @@ export default function TeacherDashboard() {
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Número de Identidad</label>
                 <input type="text" className="input-field" value={regData.idNumber} onChange={e => setRegData({...regData, idNumber: e.target.value})} required placeholder="Ej. 100200300" />
               </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Grado / Curso</label>
+                <input type="text" className="input-field" value={regData.grade} onChange={e => setRegData({...regData, grade: e.target.value})} required placeholder="Ej. Quinto, 10A, etc." />
+              </div>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombres</label>
@@ -254,11 +258,13 @@ export default function TeacherDashboard() {
                 borderLeft: `4px solid ${att.type === 'Entrada' ? 'var(--secondary)' : '#ef4444'}`
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{att.studentName || 'Estudiante Desconocido'}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ color: 'var(--text-main)', fontSize: '1rem' }}>{att.studentName || 'Estudiante Desconocido'}</strong>
+                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>
+                      Grado: {att.studentGrade || 'No asignado'} • {att.timestamp?.toDate ? att.timestamp.toDate().toLocaleTimeString() : '...'}
+                    </span>
+                  </div>
                   <span style={{ color: att.type === 'Entrada' ? 'var(--secondary)' : '#ef4444', fontWeight: 'bold' }}>{att.type}</span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  UID: {att.uid} • {att.timestamp?.toDate ? att.timestamp.toDate().toLocaleTimeString() : '...'}
                 </div>
               </div>
             ))}
@@ -279,9 +285,9 @@ export default function TeacherDashboard() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}
               >
-                <div>
-                  <strong style={{ display: 'block', color: 'var(--text-main)' }}>{s.firstName} {s.lastName}</strong>
-                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>ID: {s.id}</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <strong style={{ color: 'var(--text-main)', fontSize: '1.1rem' }}>{s.firstName} {s.lastName}</strong>
+                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grado: {s.grade || 'No asignado'}</span>
                 </div>
                 <span style={{ color: 'var(--primary)' }}>Ver Perfil ➔</span>
               </div>
