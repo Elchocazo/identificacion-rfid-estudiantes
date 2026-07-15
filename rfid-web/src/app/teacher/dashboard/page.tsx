@@ -109,65 +109,69 @@ export default function TeacherDashboard() {
       {showRegisterForm && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(0,0,0,0.8)', zIndex: 1000,
+          background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
           display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'
         }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2>Registrar Estudiante</h2>
-              <button onClick={() => setShowRegisterForm(false)} style={{ background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}>✕</button>
+          <div className="glass-panel" style={{ 
+            width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', 
+            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
+              <button onClick={() => setShowRegisterForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
             </div>
             
             <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--secondary)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-              <strong>Paso 1:</strong> Pasa una tarjeta nueva por el lector para detectarla.
+              <strong style={{ color: 'var(--secondary)' }}>Paso 1:</strong> Pasa una tarjeta nueva por el lector para detectarla.
               <br/>
-              <span className="text-muted">
-                Tarjetas pendientes detectadas: {pendingCards.length > 0 ? pendingCards.map(p => p.uid).join(', ') : 'Ninguna'}
+              <span style={{ color: '#cbd5e1', fontSize: '0.9rem', marginTop: '0.5rem', display: 'block' }}>
+                Tarjetas pendientes detectadas: {pendingCards.length > 0 ? <strong style={{ color: 'white' }}>{pendingCards.map(p => p.uid).join(', ')}</strong> : 'Ninguna'}
               </span>
             </div>
 
-            <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleRegisterStudent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label>UID de Tarjeta (Autollenado)</label>
-                <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Pasa la tarjeta..." />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>UID de Tarjeta (Autollenado)</label>
+                <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold', letterSpacing: '1px' }} />
               </div>
               
               <div>
-                <label>Nombres</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombres</label>
                 <input type="text" className="input-field" value={regData.firstName} onChange={e => setRegData({...regData, firstName: e.target.value})} required />
               </div>
               <div>
-                <label>Apellidos</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Apellidos</label>
                 <input type="text" className="input-field" value={regData.lastName} onChange={e => setRegData({...regData, lastName: e.target.value})} required />
               </div>
               <div>
-                <label>Fecha de Nacimiento</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Fecha de Nacimiento</label>
                 <input type="date" className="input-field" value={regData.birthday} onChange={e => setRegData({...regData, birthday: e.target.value})} required />
               </div>
               <div>
-                <label>Foto (URL)</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Foto (URL opcional)</label>
                 <input type="url" className="input-field" value={regData.photoUrl} onChange={e => setRegData({...regData, photoUrl: e.target.value})} placeholder="https://..." />
               </div>
 
-              <div style={{ gridColumn: '1 / -1', marginTop: '1rem', borderBottom: '1px solid var(--border)' }}></div>
-              <h3 style={{ gridColumn: '1 / -1' }}>Datos del Acudiente / Padre</h3>
+              <div style={{ gridColumn: '1 / -1', margin: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
+              <h3 style={{ gridColumn: '1 / -1', color: 'var(--text-main)', margin: 0 }}>Datos del Acudiente / Padre</h3>
 
               <div>
-                <label>Nombre del Padre</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombre del Padre</label>
                 <input type="text" className="input-field" value={regData.parentName} onChange={e => setRegData({...regData, parentName: e.target.value})} required />
               </div>
               <div>
-                <label>Teléfono</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Teléfono</label>
                 <input type="tel" className="input-field" value={regData.parentPhone} onChange={e => setRegData({...regData, parentPhone: e.target.value})} required />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label>Número de Identificación (Usado para el login)</label>
-                <input type="text" className="input-field" value={regData.parentId} onChange={e => setRegData({...regData, parentId: e.target.value})} required />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Número de Identificación <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>(Usado para el login)</span></label>
+                <input type="text" className="input-field" value={regData.parentId} onChange={e => setRegData({...regData, parentId: e.target.value})} required placeholder="Ej. 10203040" />
               </div>
 
-              <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={!regData.uid || isRegistering}>
-                  {isRegistering ? 'Registrando...' : 'Finalizar Registro'}
+              <div style={{ gridColumn: '1 / -1', marginTop: '1.5rem' }}>
+                <button type="submit" className="btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} disabled={!regData.uid || isRegistering}>
+                  {isRegistering ? 'Registrando Estudiante...' : 'Finalizar Registro'}
                 </button>
               </div>
             </form>

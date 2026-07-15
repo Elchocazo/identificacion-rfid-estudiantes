@@ -25,15 +25,15 @@ export default function ParentDashboard({ params }: { params: { id: string } }) 
         const attRef = collection(db, 'attendance');
         const qAtt = query(attRef, where('studentId', '==', params.id));
         const attSnap = await getDocs(qAtt);
-        const attData = attSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        attData.sort((a, b) => b.timestamp - a.timestamp);
+        const attData = attSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        attData.sort((a: any, b: any) => b.timestamp - a.timestamp);
         setAttendances(attData);
 
         const notesRef = collection(db, 'notes');
         const qNotes = query(notesRef, where('studentId', '==', params.id));
         const notesSnap = await getDocs(qNotes);
-        const notesData = notesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        notesData.sort((a, b) => b.timestamp - a.timestamp);
+        const notesData = notesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        notesData.sort((a: any, b: any) => b.timestamp - a.timestamp);
         setNotes(notesData);
 
       } catch (error) {
