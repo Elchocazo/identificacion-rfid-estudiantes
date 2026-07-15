@@ -24,20 +24,20 @@ export default function TeacherDashboard() {
     // Escuchar Asistencias en tiempo real
     const qAttend = query(collection(db, 'attendance'), orderBy('timestamp', 'desc'), limit(15));
     const unsubAttend = onSnapshot(qAttend, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setAttendances(data);
     });
 
     // Escuchar Estudiantes
     const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setStudents(data);
     });
 
     // Escuchar Tarjetas Pendientes
     const qPending = query(collection(db, 'pending_registrations'), orderBy('timestamp', 'desc'), limit(5));
     const unsubPending = onSnapshot(qPending, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setPendingCards(data);
       // Autollenar el formulario si está abierto y llega una tarjeta
       if (data.length > 0) {
