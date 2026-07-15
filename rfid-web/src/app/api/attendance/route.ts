@@ -92,10 +92,9 @@ export async function POST(request: Request) {
         // Enviar WhatsApp al llegar a 3 tardes
         if (lateArrivals === 3) {
           try {
-            const phone = studentData.parentPhone.replace(/[^0-9]/g, ''); // Solo números
-            // Asegurarse que empiece con el código de país. Asumimos Colombia (+57) si no lo tiene
-            const finalPhone = phone.startsWith('57') ? phone : `57${phone}`;
-            const message = encodeURIComponent(`🚨 *Alerta de Colegio Hogar Madre de Dios*\n\nEstimado/a ${studentData.parentName},\nLe informamos que su hijo/a *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde (después de las 7:00 AM).\n\nHora de registro: ${nowBogota.toLocaleTimeString('es-CO')}`);
+            // El usuario pidió que los mensajes le lleguen a su celular 3015085806
+            const finalPhone = '573015085806'; 
+            const message = encodeURIComponent(`🚨 *Alerta de Colegio Hogar Madre de Dios*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde (después de las 7:00 AM).\n\nHora de registro: ${nowBogota.toLocaleTimeString('es-CO')}`);
             const apiKey = process.env.CALLMEBOT_API_KEY || 'AQUI_TU_APIKEY'; // Reemplazar con API Key real
             
             // Enviamos el mensaje sin esperar a que termine para no bloquear la respuesta de la puerta

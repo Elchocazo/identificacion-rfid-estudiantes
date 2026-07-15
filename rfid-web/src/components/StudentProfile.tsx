@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
@@ -21,6 +21,7 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   const [isEditingSchoolName, setIsEditingSchoolName] = useState(false);
   const [tempSchoolName, setTempSchoolName] = useState('');
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchNotes = async () => {
     const notesRef = collection(db, 'notes');
@@ -96,16 +97,40 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
     }
   };
 
-  const handleUpdatePhoto = async () => {
-    const newUrl = prompt("Ingresa la nueva URL de la foto de perfil:");
-    if (!newUrl) return;
+  const handleUpdatePhotoClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUpdatingPhoto(true);
     try {
-      await setDoc(doc(db, 'students', studentId), { photoUrl: newUrl }, { merge: true });
-      setStudent({ ...student, photoUrl: newUrl });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 300;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const base64Url = canvas.toDataURL('image/jpeg', 0.8);
+            
+            await setDoc(doc(db, 'students', studentId), { photoUrl: base64Url }, { merge: true });
+            if (student) setStudent({ ...student, photoUrl: base64Url });
+          }
+          setIsUpdatingPhoto(false);
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      alert("Error actualizando la foto.");
-    } finally {
+      alert("Error procesando la imagen.");
       setIsUpdatingPhoto(false);
     }
   };
@@ -168,7 +193,7 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
               </div>
             )}
             <button 
-              onClick={handleUpdatePhoto}
+              onClick={handleUpdatePhotoClick}
               disabled={isUpdatingPhoto}
               style={{
                 position: 'absolute', bottom: '10px', right: '10px', background: 'var(--primary)', 
@@ -181,6 +206,13 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
             >
               ✏️
             </button>
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              style={{ display: 'none' }} 
+            />
           </div>
           <h3 style={{ marginTop: '1.5rem', color: 'var(--text-main)', textAlign: 'center', fontSize: '1rem', fontWeight: '800', letterSpacing: '1px' }}>FOTO DE<br/>ESTUDIANTE</h3>
         </div>
