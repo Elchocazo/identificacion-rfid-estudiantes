@@ -147,18 +147,6 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
       
       {/* HEADER COLEGIO */}
       <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '2rem', position: 'relative' }}>
-        {isAdmin && isEditingSchoolName ? (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input 
-              type="text" 
-              className="input-field" 
-              value={tempSchoolName} 
-              onChange={e => setTempSchoolName(e.target.value)} 
-              style={{ padding: '0.5rem', width: '300px', color: 'black' }}
-            />
-            <button className="btn-primary" onClick={handleSaveSchoolName} style={{ padding: '0.5rem 1rem' }}>Guardar</button>
-            <button className="btn-secondary" onClick={() => setIsEditingSchoolName(false)} style={{ padding: '0.5rem 1rem' }}>Cancelar</button>
-          </div>
         <h1 style={{ color: 'var(--text-main)', textAlign: 'center', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {schoolName}
         </h1>

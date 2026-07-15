@@ -12,7 +12,7 @@ export default function SuperAdminPage() {
   const [newSchoolName, setNewSchoolName] = useState('');
   const [newSchoolCode, setNewSchoolCode] = useState('');
 
-  const SUPER_PASSWORD = 'superadmin2026';
+  const SUPER_PASSWORD = '1061768991';
 
   const fetchSchools = async () => {
     const querySnapshot = await getDocs(collection(db, 'schools'));
