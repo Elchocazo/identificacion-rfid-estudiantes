@@ -95,7 +95,7 @@ export async function POST(request: Request) {
             // El usuario pidió que los mensajes le lleguen a su celular 3015085806
             const finalPhone = '573015085806'; 
             const message = encodeURIComponent(`🚨 *Alerta de Colegio Hogar Madre de Dios*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde (después de las 7:00 AM).\n\nHora de registro: ${nowBogota.toLocaleTimeString('es-CO')}`);
-            const apiKey = process.env.CALLMEBOT_API_KEY || 'AQUI_TU_APIKEY'; // Reemplazar con API Key real
+            const apiKey = process.env.CALLMEBOT_API_KEY || '1538587'; // Clave API del usuario
             
             // Enviamos el mensaje sin esperar a que termine para no bloquear la respuesta de la puerta
             fetch(`https://api.callmebot.com/whatsapp.php?phone=${finalPhone}&text=${message}&apikey=${apiKey}`);
