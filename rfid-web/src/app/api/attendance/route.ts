@@ -71,10 +71,10 @@ export async function POST(request: Request) {
       studentName: `${studentData.firstName} ${studentData.lastName}`
     });
 
-    // 4. Evolución de la Mascota (Mecánica de recompensas)
-    // Cada vez que un estudiante asiste, suma puntos a la mascota
+    // 4. Evolución de la Mascota y Llegadas Tardes
     let petPoints = studentData.petPoints || 0;
     let petLevel = studentData.petLevel || 1;
+    let lateArrivals = studentData.lateArrivals || 0;
     
     petPoints += 10; // 10 puntos por escaneo exitoso
     
@@ -83,10 +83,35 @@ export async function POST(request: Request) {
       petPoints = 0; // Reiniciar puntos tras subir de nivel
     }
 
+    // Comprobar Llegada Tarde (después de las 7:00 AM hora Bogotá)
+    if (type === 'Entrada') {
+      const nowBogota = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Bogota"}));
+      if (nowBogota.getHours() >= 7) {
+        lateArrivals += 1;
+        
+        // Enviar WhatsApp al llegar a 3 tardes
+        if (lateArrivals === 3) {
+          try {
+            const phone = studentData.parentPhone.replace(/[^0-9]/g, ''); // Solo números
+            // Asegurarse que empiece con el código de país. Asumimos Colombia (+57) si no lo tiene
+            const finalPhone = phone.startsWith('57') ? phone : `57${phone}`;
+            const message = encodeURIComponent(`🚨 *Alerta de Colegio Hogar Madre de Dios*\n\nEstimado/a ${studentData.parentName},\nLe informamos que su hijo/a *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde (después de las 7:00 AM).\n\nHora de registro: ${nowBogota.toLocaleTimeString('es-CO')}`);
+            const apiKey = process.env.CALLMEBOT_API_KEY || 'AQUI_TU_APIKEY'; // Reemplazar con API Key real
+            
+            // Enviamos el mensaje sin esperar a que termine para no bloquear la respuesta de la puerta
+            fetch(`https://api.callmebot.com/whatsapp.php?phone=${finalPhone}&text=${message}&apikey=${apiKey}`);
+          } catch(e) {
+            console.error('Error enviando WhatsApp', e);
+          }
+        }
+      }
+    }
+
     // Actualizar estudiante
     await updateDoc(doc(db, 'students', studentId), {
       petPoints,
       petLevel,
+      lateArrivals,
       lastAttendance: serverTimestamp()
     });
 
@@ -95,7 +120,8 @@ export async function POST(request: Request) {
       message: 'Asistencia registrada', 
       type, 
       student: `${studentData.firstName} ${studentData.lastName}`,
-      petLevel
+      petLevel,
+      lateArrivals
     }, { status: 200 });
 
   } catch (error) {

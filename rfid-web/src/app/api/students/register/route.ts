@@ -15,7 +15,8 @@ export async function POST(request: Request) {
       parentPhone, 
       parentName, 
       parentId, 
-      pendingId 
+      pendingId,
+      idNumber
     } = data;
 
     if (!uid || !parentId) {
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
     const studentsRef = collection(db, 'students');
     const newStudent = await addDoc(studentsRef, {
       uid,
-      idNumber: parentId, // Usamos esto para buscarlo en el login
+      idNumber, // Tarjeta de identidad del estudiante
       name: `${firstName} ${lastName}`,
       firstName,
       lastName,

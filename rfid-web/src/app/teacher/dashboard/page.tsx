@@ -12,7 +12,7 @@ export default function TeacherDashboard() {
   // Para el registro de estudiantes
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [regData, setRegData] = useState({
-    uid: '', pendingId: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: ''
+    uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: ''
   });
   const [isRegistering, setIsRegistering] = useState(false);
 
@@ -61,7 +61,7 @@ export default function TeacherDashboard() {
       if (data.success) {
         alert('¡Estudiante registrado! El padre puede iniciar sesión con Identificación: ' + regData.parentId + ' y Contraseña: ' + data.parentPassword);
         setShowRegisterForm(false);
-        setRegData({ uid: '', pendingId: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
+        setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
       } else {
         alert('Error: ' + data.error);
       }
@@ -98,7 +98,7 @@ export default function TeacherDashboard() {
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
               <button onClick={() => {
                 setShowRegisterForm(false);
-                setRegData({ uid: '', pendingId: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
+                setRegData({ uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: '' });
               }} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
             </div>
             
@@ -117,6 +117,11 @@ export default function TeacherDashboard() {
                 </div>
               </div>
               
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Número de Identidad</label>
+                <input type="text" className="input-field" value={regData.idNumber} onChange={e => setRegData({...regData, idNumber: e.target.value})} required placeholder="Ej. 100200300" />
+              </div>
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombres</label>
                 <input type="text" className="input-field" value={regData.firstName} onChange={e => setRegData({...regData, firstName: e.target.value})} required />

@@ -20,6 +20,7 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   const [newObservation, setNewObservation] = useState('');
   const [isEditingSchoolName, setIsEditingSchoolName] = useState(false);
   const [tempSchoolName, setTempSchoolName] = useState('');
+  const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
 
   const fetchNotes = async () => {
     const notesRef = collection(db, 'notes');
@@ -95,6 +96,20 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
     }
   };
 
+  const handleUpdatePhoto = async () => {
+    const newUrl = prompt("Ingresa la nueva URL de la foto de perfil:");
+    if (!newUrl) return;
+    setIsUpdatingPhoto(true);
+    try {
+      await setDoc(doc(db, 'students', studentId), { photoUrl: newUrl }, { merge: true });
+      setStudent({ ...student, photoUrl: newUrl });
+    } catch (error) {
+      alert("Error actualizando la foto.");
+    } finally {
+      setIsUpdatingPhoto(false);
+    }
+  };
+
   if (loading) return <div className="container flex-center" style={{ minHeight: '100vh', color: 'var(--text-main)' }}>Cargando perfil...</div>;
   if (!student) return <div className="container flex-center" style={{ minHeight: '100vh', color: 'var(--text-main)' }}>Estudiante no encontrado.</div>;
 
@@ -136,22 +151,38 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
       </header>
 
       {/* TOP SECTION: FOTO Y DATOS */}
-      <section className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', marginBottom: '2rem', padding: '3rem' }}>
+      <section className="glass-panel" style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', marginBottom: '2rem', padding: '3rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', borderRadius: '16px' }}>
         
         {/* FOTO */}
-        <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {student.photoUrl && student.photoUrl !== 'https://via.placeholder.com/150' ? (
-            <img 
-              src={student.photoUrl} 
-              alt={student.name} 
-              style={{ width: '200px', height: '200px', objectFit: 'cover', border: '4px solid var(--text-main)' }} 
-            />
-          ) : (
-            <div style={{ width: '200px', height: '200px', border: '4px solid var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e2e8f0', fontSize: '5rem' }}>
-              👦
-            </div>
-          )}
-          <h3 style={{ marginTop: '1rem', color: 'var(--text-main)', textAlign: 'center' }}>FOTO DE<br/>ESTUDIANTE</h3>
+        <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            {student.photoUrl && student.photoUrl !== 'https://via.placeholder.com/150' ? (
+              <img 
+                src={student.photoUrl} 
+                alt={student.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e2e8f0', fontSize: '5rem' }}>
+                👦
+              </div>
+            )}
+            <button 
+              onClick={handleUpdatePhoto}
+              disabled={isUpdatingPhoto}
+              style={{
+                position: 'absolute', bottom: '10px', right: '10px', background: 'var(--primary)', 
+                color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px',
+                cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)', transition: 'transform 0.2s',
+                opacity: isUpdatingPhoto ? 0.5 : 1
+              }}
+              title="Cambiar Foto"
+            >
+              ✏️
+            </button>
+          </div>
+          <h3 style={{ marginTop: '1.5rem', color: 'var(--text-main)', textAlign: 'center', fontSize: '1rem', fontWeight: '800', letterSpacing: '1px' }}>FOTO DE<br/>ESTUDIANTE</h3>
         </div>
 
         {/* DATOS & MASCOTA */}
@@ -160,9 +191,9 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
             <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>NOMBRE:</span> 
             <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{student.firstName} {student.lastName}</span>
           </div>
-          <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
+          <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
             <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>IDENTIFICACIÓN:</span> 
-            <span style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.id}</span>
+            <span style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{student.idNumber || student.id}</span>
           </div>
           <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
             <span className="text-muted" style={{ fontWeight: 'bold', width: '150px', display: 'inline-block' }}>ACUDIENTE:</span> 
@@ -186,16 +217,16 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
       </section>
 
       {/* BOTTOM SECTION: TABS */}
-      <section className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: '4px solid var(--text-main)' }}>
-        <div style={{ display: 'flex', borderBottom: '4px solid var(--text-main)' }}>
+      <section className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', borderRadius: '16px' }}>
+        <div style={{ display: 'flex', borderBottom: '2px solid var(--border)' }}>
           <button 
             onClick={() => setActiveTab('historial')}
             style={{ 
-              flex: 1, padding: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
-              background: activeTab === 'historial' ? '#ffffff' : '#f1f5f9',
-              color: 'var(--text-main)',
-              borderRight: '4px solid var(--text-main)',
-              transition: 'background 0.2s'
+              flex: 1, padding: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+              background: activeTab === 'historial' ? '#ffffff' : '#f8fafc',
+              color: activeTab === 'historial' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeTab === 'historial' ? '3px solid var(--primary)' : '3px solid transparent',
+              transition: 'all 0.3s ease'
             }}
           >
             HISTORIAL DE ASISTENCIA
@@ -203,10 +234,11 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
           <button 
             onClick={() => setActiveTab('observaciones')}
             style={{ 
-              flex: 1, padding: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
-              background: activeTab === 'observaciones' ? '#ffffff' : '#f1f5f9',
-              color: 'var(--text-main)',
-              transition: 'background 0.2s'
+              flex: 1, padding: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+              background: activeTab === 'observaciones' ? '#ffffff' : '#f8fafc',
+              color: activeTab === 'observaciones' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeTab === 'observaciones' ? '3px solid var(--primary)' : '3px solid transparent',
+              transition: 'all 0.3s ease'
             }}
           >
             OBSERVACIONES
