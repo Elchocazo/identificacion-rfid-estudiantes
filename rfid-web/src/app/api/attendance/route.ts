@@ -40,6 +40,15 @@ export async function POST(request: Request) {
       where('studentId', '==', studentId)
     );
     const attSnapshot = await getDocs(attQuery);
+    const allRecords = attSnapshot.docs.map(d => d.data());
+    
+    // Fetch settings to get currentPeriod
+    const settingsRef = doc(db, 'settings', 'general');
+    const settingsSnap = await getDoc(settingsRef);
+    const currentPeriod = settingsSnap.exists() && settingsSnap.data().currentPeriod ? settingsSnap.data().currentPeriod : 1;
+
+    const nowBogota = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Bogota"}));
+    const isLate = nowBogota.getHours() >= 7;
     
     // Simplificación: Eliminamos el concepto de "Salida" por petición del usuario.
     // Todas las lecturas serán "Entrada" para evitar el problema de que a los estudiantes se les olvide.
@@ -50,9 +59,11 @@ export async function POST(request: Request) {
     await addDoc(attendanceRef, {
       studentId,
       uid,
-      type,
+      type: 'Entrada',
       timestamp: serverTimestamp(),
-      studentName: `${studentData.firstName} ${studentData.lastName}`
+      studentName: `${studentData.firstName} ${studentData.lastName}`,
+      period: currentPeriod,
+      isLate: isLate
     });
 
     // 4. Evolución de la Mascota y Llegadas Tardes
@@ -67,25 +78,31 @@ export async function POST(request: Request) {
       petPoints = 0; // Reiniciar puntos tras subir de nivel
     }
 
-    // Comprobar Llegada Tarde (después de las 7:00 AM hora Bogotá)
-    if (type === 'Entrada') {
-      const nowBogota = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Bogota"}));
-      if (nowBogota.getHours() >= 7) {
-        lateArrivals += 1;
-        
-        // Enviar WhatsApp al llegar a 3 tardes
-        if (lateArrivals === 3) {
-          try {
-            // El usuario pidió que los mensajes le lleguen a su celular 3015085806
-            const finalPhone = '573015085806'; 
-            const message = encodeURIComponent(`🚨 *Alerta de Colegio Hogar Madre de Dios*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde (después de las 7:00 AM).\n\nHora de registro: ${nowBogota.toLocaleTimeString('es-CO')}`);
-            const apiKey = process.env.CALLMEBOT_API_KEY || '1538587'; // Clave API del usuario
-            
-            // Enviamos el mensaje sin esperar a que termine para no bloquear la respuesta de la puerta
-            fetch(`https://api.callmebot.com/whatsapp.php?phone=${finalPhone}&text=${message}&apikey=${apiKey}`);
-          } catch(e) {
-            console.error('Error enviando WhatsApp', e);
-          }
+    // Comprobar Llegadas Tardes en el Periodo Actual
+    if (isLate) {
+      // Filtrar registros pasados de este estudiante que fueron tarde y en el periodo actual
+      const pastLateRecords = allRecords.filter(r => r.period === currentPeriod && r.isLate === true);
+      
+      const totalLateInPeriod = pastLateRecords.length + 1; // +1 por la llegada de hoy
+      lateArrivals = totalLateInPeriod; // Actualizamos el número de llegadas tardes en el doc del estudiante (informativo)
+      
+      // Enviar WhatsApp al llegar a 3 tardes en el periodo
+      if (totalLateInPeriod === 3) {
+        try {
+          const datesList = [...pastLateRecords.map(r => r.timestamp?.toMillis ? new Date(r.timestamp.toMillis()) : nowBogota)];
+          datesList.push(nowBogota); // añadir la llegada actual
+          
+          datesList.sort((a, b) => a.getTime() - b.getTime()); // ordenar cronológicamente
+          
+          const formattedDates = datesList.map((d, i) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
+
+          const finalPhone = '573015085806'; 
+          const message = encodeURIComponent(`🚨 *Alerta de Colegio*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde en el Periodo ${currentPeriod}.\n\n*Historial de llegadas:*\n${formattedDates}`);
+          const apiKey = process.env.CALLMEBOT_API_KEY || '1538587';
+          
+          fetch(`https://api.callmebot.com/whatsapp.php?phone=${finalPhone}&text=${message}&apikey=${apiKey}`);
+        } catch(e) {
+          console.error('Error enviando WhatsApp', e);
         }
       }
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 
 export default function TeacherDashboard() {
   const [attendances, setAttendances] = useState<any[]>([]);
@@ -15,6 +15,11 @@ export default function TeacherDashboard() {
     uid: '', pendingId: '', idNumber: '', firstName: '', lastName: '', birthday: '', photoUrl: '', parentName: '', parentPhone: '', parentId: ''
   });
   const [isRegistering, setIsRegistering] = useState(false);
+
+  // Configuraciones globales
+  const [showSettingsForm, setShowSettingsForm] = useState(false);
+  const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
     // Escuchar Asistencias en tiempo real
@@ -41,10 +46,25 @@ export default function TeacherDashboard() {
       }
     });
 
+    // Escuchar Configuración Global
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setSettings({ 
+          schoolName: data.schoolName || 'Colegio Hogar Madre de Dios', 
+          currentPeriod: data.currentPeriod || 1 
+        });
+      } else {
+        // Inicializar si no existe
+        setDoc(doc(db, 'settings', 'general'), { schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
+      }
+    });
+
     return () => {
       unsubAttend();
       unsubStudents();
       unsubPending();
+      unsubSettings();
     };
   }, []);
 
@@ -72,15 +92,72 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      await setDoc(doc(db, 'settings', 'general'), settings, { merge: true });
+      setShowSettingsForm(false);
+      alert('¡Configuración guardada exitosamente!');
+    } catch (e) {
+      alert('Error guardando la configuración');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 0' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 className="text-gradient">Panel de Control Docente</h1>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h1 className="text-gradient" style={{ margin: 0 }}>Panel de Control Docente</h1>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{settings.schoolName} - Periodo {settings.currentPeriod}</span>
+        </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn-secondary" onClick={() => setShowSettingsForm(true)} title="Configuración">⚙️</button>
           <button className="btn-primary" onClick={() => setShowRegisterForm(true)}>➕ Agregar Estudiante</button>
           <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
         </div>
       </header>
+
+      {/* MODAL DE CONFIGURACION */}
+      {showSettingsForm && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center'
+        }}>
+          <div className="glass-panel" style={{ 
+            width: '95%', maxWidth: '500px',
+            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Configuración Global</h2>
+              <button onClick={() => setShowSettingsForm(false)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}>✕</button>
+            </div>
+            <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Nombre del Colegio</label>
+                <input type="text" className="input-field" value={settings.schoolName} onChange={e => setSettings({...settings, schoolName: e.target.value})} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Periodo Académico Actual</label>
+                <select className="input-field" value={settings.currentPeriod} onChange={e => setSettings({...settings, currentPeriod: Number(e.target.value)})} style={{ background: '#0f172a' }}>
+                  <option value={1}>Periodo 1</option>
+                  <option value={2}>Periodo 2</option>
+                  <option value={3}>Periodo 3</option>
+                  <option value={4}>Periodo 4</option>
+                </select>
+                <small style={{ display: 'block', color: 'var(--text-muted)', marginTop: '0.5rem' }}>* Al cambiar de periodo, las faltas de los estudiantes comienzan desde 0 para el nuevo periodo.</small>
+              </div>
+              <button type="submit" className="btn-primary" disabled={isSavingSettings} style={{ marginTop: '1rem' }}>
+                {isSavingSettings ? 'Guardando...' : 'Guardar Configuración'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE REGISTRO */}
       {showRegisterForm && (

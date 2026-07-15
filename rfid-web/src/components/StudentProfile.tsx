@@ -35,11 +35,11 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch School Name
-        const schoolRef = doc(db, 'settings', 'school');
-        const schoolSnap = await getDoc(schoolRef);
-        if (schoolSnap.exists() && schoolSnap.data().name) {
-          setSchoolName(schoolSnap.data().name);
+        // Fetch Global Settings
+        const settingsRef = doc(db, 'settings', 'general');
+        const settingsSnap = await getDoc(settingsRef);
+        if (settingsSnap.exists() && settingsSnap.data().schoolName) {
+          setSchoolName(settingsSnap.data().schoolName);
         }
 
         // Fetch Student
