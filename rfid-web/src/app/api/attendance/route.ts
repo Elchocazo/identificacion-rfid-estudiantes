@@ -37,21 +37,26 @@ export async function POST(request: Request) {
     const attendanceRef = collection(db, 'attendance');
     const attQuery = query(
       attendanceRef,
-      where('studentId', '==', studentId),
-      where('timestamp', '>=', startOfDay)
+      where('studentId', '==', studentId)
     );
     const attSnapshot = await getDocs(attQuery);
     
     // Simplificación: si el número de registros hoy es par, es Entrada, si es impar es Salida.
-    // También podríamos checar si el último es Entrada o Salida.
+    // Filtramos los de hoy en JavaScript para evitar error de índice compuesto en Firebase.
     let type = 'Entrada';
     if (!attSnapshot.empty) {
-      // Ordenamos en JS usando toMillis() para objetos Timestamp de Firestore
-      const records = attSnapshot.docs.map(d => d.data()).sort((a, b) => {
-        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-        return timeB - timeA;
-      });
+      const records = attSnapshot.docs
+        .map(d => d.data())
+        .filter(d => {
+          const time = d.timestamp?.toMillis ? d.timestamp.toMillis() : 0;
+          return time >= startOfDay.getTime();
+        })
+        .sort((a, b) => {
+          const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+          const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+          return timeB - timeA;
+        });
+
       if (records.length > 0 && records[0].type === 'Entrada') {
         type = 'Salida';
       }
