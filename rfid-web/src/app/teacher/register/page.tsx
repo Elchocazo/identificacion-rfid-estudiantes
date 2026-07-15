@@ -29,10 +29,13 @@ export default function RegisterStudentPage() {
     e.preventDefault();
     setIsRegistering(true);
     try {
+      const schoolCode = localStorage.getItem('schoolCode') || '';
+      const payload = { ...regData, schoolId: schoolCode };
+      
       const res = await fetch('/api/students/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(regData)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {

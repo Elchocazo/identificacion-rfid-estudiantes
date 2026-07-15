@@ -11,16 +11,22 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
+    const schoolCode = localStorage.getItem('schoolCode');
+    if (!schoolCode) {
+      router.push('/teacher/login');
+      return;
+    }
+
+    const unsubSettings = onSnapshot(doc(db, `schools/${schoolCode}/settings`, 'general'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setSettings({ 
-          schoolName: data.schoolName || 'Colegio Hogar Madre de Dios', 
+          schoolName: data.schoolName || 'Colegio', 
           currentPeriod: data.currentPeriod || 1,
           lateArrivalTime: data.lateArrivalTime || '07:00'
         });
       } else {
-        setDoc(doc(db, 'settings', 'general'), { schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1, lateArrivalTime: '07:00' });
+        setDoc(doc(db, `schools/${schoolCode}/settings`, 'general'), { schoolName: `Colegio ${schoolCode}`, currentPeriod: 1, lateArrivalTime: '07:00' });
       }
     });
 
@@ -29,9 +35,12 @@ export default function SettingsPage() {
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    const schoolCode = localStorage.getItem('schoolCode');
+    if (!schoolCode) return;
+
     setIsSaving(true);
     try {
-      await setDoc(doc(db, 'settings', 'general'), settings, { merge: true });
+      await setDoc(doc(db, `schools/${schoolCode}/settings`, 'general'), settings, { merge: true });
       alert('¡Configuración guardada exitosamente!');
       router.push('/teacher/dashboard');
     } catch (e) {

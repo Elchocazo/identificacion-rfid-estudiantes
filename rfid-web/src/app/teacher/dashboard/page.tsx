@@ -15,30 +15,37 @@ export default function TeacherDashboard() {
   const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
 
   useEffect(() => {
+    const schoolCode = localStorage.getItem('schoolCode') || '';
+    if (!schoolCode) {
+      router.push('/teacher/login');
+      return;
+    }
+
     // Escuchar Asistencias en tiempo real
-    const qAttend = query(collection(db, 'attendance'), orderBy('timestamp', 'desc'), limit(15));
+    const qAttend = query(collection(db, 'attendance'), where('schoolId', '==', schoolCode), orderBy('timestamp', 'desc'), limit(15));
     const unsubAttend = onSnapshot(qAttend, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setAttendances(data);
     });
 
     // Escuchar Estudiantes
-    const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+    const qStudents = query(collection(db, 'students'), where('schoolId', '==', schoolCode));
+    const unsubStudents = onSnapshot(qStudents, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       setStudents(data);
     });
 
     // Escuchar Configuración Global
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
+    const unsubSettings = onSnapshot(doc(db, `schools/${schoolCode}/settings`, 'general'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setSettings({ 
-          schoolName: data.schoolName || 'Colegio Hogar Madre de Dios', 
+          schoolName: data.schoolName || 'Colegio', 
           currentPeriod: data.currentPeriod || 1 
         });
       } else {
-        // Inicializar si no existe
-        setDoc(doc(db, 'settings', 'general'), { schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
+        // Fallback si no hay configuración
+        setSettings({ schoolName: `Colegio ${schoolCode}`, currentPeriod: 1 });
       }
     });
 

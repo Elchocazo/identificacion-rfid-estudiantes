@@ -17,16 +17,17 @@ export async function POST(request: Request) {
       parentId, 
       pendingId,
       idNumber,
-      grade
+      grade,
+      schoolId
     } = data;
 
-    if (!uid || !parentId) {
-      return NextResponse.json({ error: 'UID y Parent ID son requeridos' }, { status: 400 });
+    if (!uid || !parentId || !schoolId) {
+      return NextResponse.json({ error: 'UID, Parent ID y School ID son requeridos' }, { status: 400 });
     }
 
     // 1. Crear el usuario del padre en Firebase Auth
     // Usamos el ID del padre como contraseña
-    const parentEmail = `${parentId}@parent.school.com`;
+    const parentEmail = `${parentId}@${schoolId.toLowerCase()}.parent.school.com`;
     const parentPassword = parentId; // El usuario pidió que el login sea con identificacion y contraseña que sea la misma?
     // Wait, el usuario dijo "ingresar con el numero de identificacion y la contraseña que sea 36274528".
     // Eso fue para el admin, pero para los padres tal vez quieran usar su identificacion como contraseña, 
@@ -67,7 +68,8 @@ export async function POST(request: Request) {
       parentId,
       petLevel: 1,
       petPoints: 0,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      schoolId
     });
 
     // 3. Borrar de pending_registrations

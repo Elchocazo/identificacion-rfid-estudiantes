@@ -35,19 +35,24 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Global Settings
-        const settingsRef = doc(db, 'settings', 'general');
-        const settingsSnap = await getDoc(settingsRef);
-        if (settingsSnap.exists() && settingsSnap.data().schoolName) {
-          setSchoolName(settingsSnap.data().schoolName);
-        }
-
         // Fetch Student
         const studentRef = doc(db, 'students', studentId);
         const studentSnap = await getDoc(studentRef);
         
+        let fetchedSchoolId = '';
         if (studentSnap.exists()) {
-          setStudent({ id: studentSnap.id, ...studentSnap.data() });
+          const sData = studentSnap.data();
+          setStudent({ id: studentSnap.id, ...sData });
+          fetchedSchoolId = sData.schoolId;
+        }
+
+        if (fetchedSchoolId) {
+          // Fetch Global Settings
+          const settingsRef = doc(db, `schools/${fetchedSchoolId}/settings`, 'general');
+          const settingsSnap = await getDoc(settingsRef);
+          if (settingsSnap.exists() && settingsSnap.data().schoolName) {
+            setSchoolName(settingsSnap.data().schoolName);
+          }
         }
 
         // Fetch Attendance
@@ -72,13 +77,8 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   }, [studentId]);
 
   const handleSaveSchoolName = async () => {
-    try {
-      await setDoc(doc(db, 'settings', 'school'), { name: tempSchoolName }, { merge: true });
-      setSchoolName(tempSchoolName);
-      setIsEditingSchoolName(false);
-    } catch (e) {
-      alert("Error guardando el nombre del colegio.");
-    }
+    // Edit disabled to prevent conflicts with Global Settings
+    setIsEditingSchoolName(false);
   };
 
   const handleAddObservation = async () => {
@@ -159,20 +159,9 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
             <button className="btn-primary" onClick={handleSaveSchoolName} style={{ padding: '0.5rem 1rem' }}>Guardar</button>
             <button className="btn-secondary" onClick={() => setIsEditingSchoolName(false)} style={{ padding: '0.5rem 1rem' }}>Cancelar</button>
           </div>
-        ) : (
-          <h1 style={{ color: 'var(--text-main)', textAlign: 'center', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {schoolName}
-            {isAdmin && (
-              <button 
-                onClick={() => { setTempSchoolName(schoolName); setIsEditingSchoolName(true); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '1.2rem' }}
-                title="Editar nombre del colegio"
-              >
-                ✏️
-              </button>
-            )}
-          </h1>
-        )}
+        <h1 style={{ color: 'var(--text-main)', textAlign: 'center', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {schoolName}
+        </h1>
       </header>
 
       {/* TOP SECTION: FOTO Y DATOS */}

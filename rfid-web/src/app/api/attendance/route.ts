@@ -4,15 +4,15 @@ import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, update
 
 export async function POST(request: Request) {
   try {
-    const { uid } = await request.json();
+    const { uid, schoolId } = await request.json();
 
-    if (!uid) {
-      return NextResponse.json({ error: 'UID is required' }, { status: 400 });
+    if (!uid || !schoolId) {
+      return NextResponse.json({ error: 'UID y schoolId son requeridos' }, { status: 400 });
     }
 
-    // 1. Buscar si el UID corresponde a algún estudiante registrado
+    // 1. Buscar si el UID corresponde a algún estudiante registrado en ese colegio
     const studentsRef = collection(db, 'students');
-    const q = query(studentsRef, where('uid', '==', uid));
+    const q = query(studentsRef, where('uid', '==', uid), where('schoolId', '==', schoolId));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       const pendingRef = collection(db, 'pending_registrations');
       await addDoc(pendingRef, {
         uid,
+        schoolId,
         timestamp: serverTimestamp()
       });
       return NextResponse.json({ error: 'Tarjeta no registrada. Lista para ser asignada en el panel.' }, { status: 404 });
@@ -42,7 +43,8 @@ export async function POST(request: Request) {
     const attSnapshot = await getDocs(attQuery);
     const allRecords = attSnapshot.docs.map(d => d.data());
     
-    const settingsRef = doc(db, 'settings', 'general');
+    // Fetch settings to get currentPeriod
+    const settingsRef = doc(db, `schools/${schoolId}/settings`, 'general');
     const settingsSnap = await getDoc(settingsRef);
     const settingsData = settingsSnap.exists() ? settingsSnap.data() : {};
     const currentPeriod = settingsData.currentPeriod ? settingsData.currentPeriod : 1;
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
     await addDoc(attendanceRef, {
       studentId,
       uid,
+      schoolId,
       type: 'Entrada',
       timestamp: serverTimestamp(),
       studentName: `${studentData.firstName} ${studentData.lastName}`,

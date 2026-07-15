@@ -14,6 +14,7 @@ interface LoginFormProps {
 export default function LoginForm({ role, title }: LoginFormProps) {
   const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [schoolCode, setSchoolCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -24,10 +25,12 @@ export default function LoginForm({ role, title }: LoginFormProps) {
     setLoading(true);
 
     try {
-      // TRUCO: Como Firebase Auth requiere un correo electrónico, vamos a simular uno
-      // usando el número de identificación y el rol.
-      // Ejemplo: 123456@parent.school.com o 987654@teacher.school.com
-      const email = `${idNumber}@${role}.school.com`;
+      // Usando el código del colegio en el correo electrónico simulado
+      // Ejemplo: 123456@san_jose.teacher.school.com
+      const email = `${idNumber}@${schoolCode.toLowerCase()}.${role}.school.com`;
+      
+      // Guardar el código del colegio en localStorage para usarlo en otras partes de la app (Dashboard, Settings)
+      localStorage.setItem('schoolCode', schoolCode.toUpperCase());
       
       await signInWithEmailAndPassword(auth, email, password);
       
@@ -66,6 +69,19 @@ export default function LoginForm({ role, title }: LoginFormProps) {
       )}
 
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            Código del Colegio
+          </label>
+          <input
+            type="text"
+            required
+            className="input-field"
+            value={schoolCode}
+            onChange={(e) => setSchoolCode(e.target.value.replace(/\s+/g, '').toUpperCase())}
+            placeholder="Ej. SAN_JOSE"
+          />
+        </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             Número de Identificación
