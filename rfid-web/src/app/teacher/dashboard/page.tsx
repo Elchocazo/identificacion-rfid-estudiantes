@@ -115,7 +115,7 @@ export default function TeacherDashboard() {
           <div className="glass-panel" style={{ 
             width: '95%', maxWidth: '750px',
             background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem', marginTop: '150px'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', padding: '1.5rem', marginTop: '100px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Registrar Estudiante</h2>
