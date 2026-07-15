@@ -42,13 +42,23 @@ export async function POST(request: Request) {
     const attSnapshot = await getDocs(attQuery);
     const allRecords = attSnapshot.docs.map(d => d.data());
     
-    // Fetch settings to get currentPeriod
     const settingsRef = doc(db, 'settings', 'general');
     const settingsSnap = await getDoc(settingsRef);
-    const currentPeriod = settingsSnap.exists() && settingsSnap.data().currentPeriod ? settingsSnap.data().currentPeriod : 1;
+    const settingsData = settingsSnap.exists() ? settingsSnap.data() : {};
+    const currentPeriod = settingsData.currentPeriod ? settingsData.currentPeriod : 1;
+    const lateArrivalTimeStr = settingsData.lateArrivalTime || '07:00'; // Default a 07:00
+    
+    const [lateHour, lateMinute] = lateArrivalTimeStr.split(':').map(Number);
 
     const nowBogota = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Bogota"}));
-    const isLate = nowBogota.getHours() >= 7;
+    
+    // Comparar horas y minutos
+    let isLate = false;
+    if (nowBogota.getHours() > lateHour) {
+      isLate = true;
+    } else if (nowBogota.getHours() === lateHour && nowBogota.getMinutes() >= lateMinute) {
+      isLate = true;
+    }
     
     // Simplificación: Eliminamos el concepto de "Salida" por petición del usuario.
     // Todas las lecturas serán "Entrada" para evitar el problema de que a los estudiantes se les olvide.

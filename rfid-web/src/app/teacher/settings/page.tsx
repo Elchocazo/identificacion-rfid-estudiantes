@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
+  const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1, lateArrivalTime: '07:00' });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -16,10 +16,11 @@ export default function SettingsPage() {
         const data = docSnap.data();
         setSettings({ 
           schoolName: data.schoolName || 'Colegio Hogar Madre de Dios', 
-          currentPeriod: data.currentPeriod || 1 
+          currentPeriod: data.currentPeriod || 1,
+          lateArrivalTime: data.lateArrivalTime || '07:00'
         });
       } else {
-        setDoc(doc(db, 'settings', 'general'), { schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
+        setDoc(doc(db, 'settings', 'general'), { schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1, lateArrivalTime: '07:00' });
       }
     });
 
@@ -78,6 +79,19 @@ export default function SettingsPage() {
               <option value={3}>Periodo 3</option>
               <option value={4}>Periodo 4</option>
             </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-main)', fontSize: '1.1rem', fontWeight: 'bold' }}>Hora Límite de Llegada</label>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>* Los estudiantes que pasen la tarjeta después de esta hora serán marcados con Llegada Tarde.</p>
+            <input 
+              type="time" 
+              className="input-field" 
+              value={settings.lateArrivalTime} 
+              onChange={e => setSettings({...settings, lateArrivalTime: e.target.value})} 
+              required 
+              style={{ background: 'white' }}
+            />
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSaving} style={{ marginTop: '1rem', padding: '1rem', fontSize: '1.1rem' }}>

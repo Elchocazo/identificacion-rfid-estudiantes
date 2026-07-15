@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, limit, doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import * as XLSX from 'xlsx';
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -48,6 +49,30 @@ export default function TeacherDashboard() {
     };
   }, []);
 
+  const handleExportExcel = () => {
+    if (attendances.length === 0) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+
+    const dataToExport = attendances.map(att => {
+      const dateObj = att.timestamp?.toDate ? att.timestamp.toDate() : new Date();
+      return {
+        'Fecha': dateObj.toLocaleDateString(),
+        'Hora': dateObj.toLocaleTimeString(),
+        'Estudiante': att.studentName || 'Desconocido',
+        'Grado/Curso': att.studentGrade || 'No asignado',
+        'Periodo': att.period || 1,
+        'Estado': att.isLate ? 'LLEGADA TARDE' : att.type.toUpperCase()
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Asistencia');
+    XLSX.writeFile(workbook, `Reporte_Asistencia_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 0' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -55,7 +80,8 @@ export default function TeacherDashboard() {
           <h1 className="text-gradient" style={{ margin: 0 }}>Panel de Control Docente</h1>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{settings.schoolName} - Periodo {settings.currentPeriod}</span>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <button className="btn-secondary" onClick={handleExportExcel} style={{ background: '#10b981', color: 'white', borderColor: '#10b981' }}>📊 Descargar Excel</button>
           <button className="btn-secondary" onClick={() => router.push('/teacher/settings')} title="Configuración">⚙️</button>
           <button className="btn-primary" onClick={() => router.push('/teacher/register')}>➕ Agregar Estudiante</button>
           <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
