@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 
 #define SS_PIN 5
 #define RST_PIN 22
@@ -12,10 +13,9 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 const char* ssid = "MANUEL";
 const char* password = "36274528";
 
+
 // --- CONFIGURACIÓN DEL SERVIDOR (VERCEL) ---
-// NOTA: Cuando publiquemos en Vercel, cambiaremos esta URL.
-// Por ahora, si pruebas en local usando la misma red Wi-Fi, pon la IP de tu computadora (ej: http://192.168.1.10:3000/api/attendance)
-const char* serverName = "http://TU_DOMINIO.vercel.app/api/attendance"; 
+const char* serverName = "https://identificacion-rfid-estudiantes.vercel.app/api/attendance"; 
 
 void setup() {
   Serial.begin(115200);
@@ -63,16 +63,19 @@ void loop() {
 
   // Enviar a la base de datos a través de nuestro servidor
   if(WiFi.status() == WL_CONNECTED){
+    WiFiClientSecure client;
+    client.setInsecure(); // No validar el certificado SSL de Vercel
+    
     HTTPClient http;
+    http.setTimeout(20000); // 20 segundos de tiempo de espera (para evitar Error -11 por el arranque en frío de Vercel)
     
     // Configuramos la URL
-    http.begin(serverName);
+    http.begin(client, serverName);
     
     // Indicamos que enviaremos JSON
     http.addHeader("Content-Type", "application/json");
     
     // Creamos el JSON con el UID
-    // Quedará como: {"uid": "A1 B2 C3 D4"}
     String jsonPayload = "{\"uid\": \"" + codigoTarjeta + "\"}";
     
     Serial.println("Enviando datos al servidor...");
