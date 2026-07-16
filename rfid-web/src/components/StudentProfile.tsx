@@ -214,12 +214,12 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
     <div className="container animate-fade-in" style={{ padding: '2rem 0', maxWidth: '900px', margin: '0 auto' }}>
       
       {/* HEADER COLEGIO */}
-      <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '2rem', position: 'relative' }}>
-        <h1 style={{ color: 'var(--text-main)', textAlign: 'center', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', margin: 0, flex: '1 1 auto', minWidth: '200px' }}>
           {schoolName}
         </h1>
         {isAdmin && (
-          <div style={{ position: 'absolute', right: 0, display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <button 
               onClick={handleChangePassword} 
               className="btn-primary" 
