@@ -25,10 +25,18 @@ export async function POST(request: Request) {
     // 2. Borrar su rol para quitarle acceso
     if (studentAuthId) {
       await adminDb.collection('user_roles').doc(studentAuthId).delete();
+      
+      // 3. Borrar el usuario de Firebase Auth
+      try {
+        const { getAuth } = require('firebase-admin/auth');
+        await getAuth().deleteUser(studentAuthId);
+      } catch (authError) {
+        console.error('Error al borrar usuario de Auth:', authError);
+        // Continuamos de todas formas, lo más importante es que la tarjeta quede libre en Firestore
+      }
     }
 
-    // Nota: El usuario en Firebase Auth seguirá existiendo de forma aislada, pero la tarjeta RFID
-    // ya quedó libre porque el documento en la colección 'students' fue eliminado.
+    // Nota: La tarjeta RFID ya quedó libre porque el documento en la colección 'students' fue eliminado.
     
     return NextResponse.json({ success: true, message: 'Estudiante y tarjeta liberados exitosamente.' });
   } catch (error: any) {
