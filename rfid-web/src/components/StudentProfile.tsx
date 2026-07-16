@@ -50,6 +50,40 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
     }
   };
 
+  const handleChangePassword = async () => {
+    if (!isAdmin) return;
+    const studentAuthId = student?.studentAuthId;
+    if (!studentAuthId) {
+      alert("Este estudiante no tiene una cuenta de inicio de sesión asociada.");
+      return;
+    }
+
+    const newPassword = prompt("Ingresa la nueva contraseña para el estudiante (mínimo 6 caracteres):");
+    if (!newPassword) return; // User cancelled
+
+    if (newPassword.length < 6) {
+      alert("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUid: studentAuthId, newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Contraseña cambiada exitosamente.");
+      } else {
+        alert("Error al cambiar contraseña: " + data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de red al intentar cambiar la contraseña.");
+    }
+  };
+
   const fetchNotes = async () => {
     const notesRef = collection(db, 'notes');
     const qNotes = query(notesRef, where('studentId', '==', studentId));
@@ -180,13 +214,22 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
           {schoolName}
         </h1>
         {isAdmin && (
-          <button 
-            onClick={handleDeleteStudent} 
-            className="btn-primary" 
-            style={{ position: 'absolute', right: 0, background: '#ef4444', color: 'white', boxShadow: 'none' }}
-          >
-            🗑️ Borrar Estudiante
-          </button>
+          <div style={{ position: 'absolute', right: 0, display: 'flex', gap: '1rem' }}>
+            <button 
+              onClick={handleChangePassword} 
+              className="btn-primary" 
+              style={{ background: 'var(--primary)', color: 'white', boxShadow: 'none' }}
+            >
+              🔑 Cambiar Contraseña
+            </button>
+            <button 
+              onClick={handleDeleteStudent} 
+              className="btn-primary" 
+              style={{ background: '#ef4444', color: 'white', boxShadow: 'none' }}
+            >
+              🗑️ Borrar Estudiante
+            </button>
+          </div>
         )}
       </header>
 

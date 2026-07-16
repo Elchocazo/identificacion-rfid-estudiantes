@@ -83,6 +83,33 @@ export default function RegisterTeacher() {
     }
   };
 
+  const handleChangeTeacherPassword = async (teacher: any) => {
+    const newPassword = prompt(`Ingresa la nueva contraseña para el docente ${teacher.firstName} ${teacher.lastName} (mínimo 6 caracteres):`);
+    if (!newPassword) return; // User cancelled
+
+    if (newPassword.length < 6) {
+      alert("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUid: teacher.uid, newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Contraseña del docente actualizada exitosamente.");
+      } else {
+        alert("Error al cambiar contraseña: " + data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de red al intentar cambiar la contraseña.");
+    }
+  };
+
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 0', maxWidth: '800px' }}>
       <button className="btn-secondary" onClick={() => router.back()} style={{ marginBottom: '2rem' }}>
@@ -129,9 +156,18 @@ export default function RegisterTeacher() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {teachers.map(teacher => (
-                <div key={teacher.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--beige-dark)' }}>
-                  <strong style={{ display: 'block' }}>{teacher.firstName} {teacher.lastName}</strong>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID: {teacher.idNumber}</span>
+                <div key={teacher.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--beige-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong style={{ display: 'block' }}>{teacher.firstName} {teacher.lastName}</strong>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID: {teacher.idNumber}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleChangeTeacherPassword(teacher)}
+                    className="btn-secondary"
+                    style={{ fontSize: '0.8rem', padding: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none' }}
+                  >
+                    🔑 Cambiar Contraseña
+                  </button>
                 </div>
               ))}
             </div>
