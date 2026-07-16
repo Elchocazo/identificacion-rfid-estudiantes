@@ -127,7 +127,7 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-            Identificación o Correo Registrado
+            Identificación
           </label>
           <input
             type="text"
@@ -135,7 +135,7 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
             className="input-field"
             value={idNumber}
             onChange={(e) => setIdNumber(e.target.value)}
-            placeholder="Ej. 10203040 o correo@gmail.com"
+            placeholder="Ej. 10203040"
           />
         </div>
         <div>

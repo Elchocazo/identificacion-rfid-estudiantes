@@ -65,7 +65,9 @@ export default function RegisterStudentPage() {
       const data = await res.json();
       if (data.success) {
         alert('¡Estudiante registrado! El padre puede iniciar sesión con Identificación: ' + regData.parentId + ' y Contraseña: ' + data.parentPassword);
-        router.push('/teacher/dashboard');
+        const role = localStorage.getItem('userRole');
+        if (role === 'admin') router.push('/admin/dashboard');
+        else router.push('/teacher/dashboard');
       } else {
         alert('Error: ' + data.error);
       }
@@ -80,7 +82,11 @@ export default function RegisterStudentPage() {
     <div className="container animate-fade-in" style={{ padding: '4rem 2rem', maxWidth: '800px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
         <h1 className="text-gradient" style={{ margin: 0, fontSize: '2.5rem' }}>Registrar Estudiante</h1>
-        <button onClick={() => router.push('/teacher/dashboard')} className="btn-secondary">
+        <button onClick={() => {
+          const role = localStorage.getItem('userRole');
+          if (role === 'admin') router.push('/admin/dashboard');
+          else router.push('/teacher/dashboard');
+        }} className="btn-secondary">
           Atrás al Panel
         </button>
       </header>
