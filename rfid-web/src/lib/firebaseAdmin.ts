@@ -4,7 +4,7 @@ import { getAuth } from 'firebase-admin/auth';
 
 if (!getApps().length) {
   try {
-    if (process.env.FIREBASE_PRIVATE_KEY) {
+    if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
       initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
@@ -17,6 +17,9 @@ if (!getApps().length) {
     }
   } catch (error) {
     console.error('Firebase admin initialization error', error);
+    if (!getApps().length) {
+      initializeApp({ projectId: 'demo-project' });
+    }
   }
 }
 
