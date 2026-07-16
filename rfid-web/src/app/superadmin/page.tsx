@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
+import { auth, db, secondaryAuth } from '@/lib/firebase';
 import { collection, getDocs, deleteDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function SuperAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,7 +13,7 @@ export default function SuperAdminPage() {
   const [newSchoolName, setNewSchoolName] = useState('');
   const [newSchoolCode, setNewSchoolCode] = useState('');
 
-  // Estados para crear docente
+  // Estados para crear administrador
   const [teacherId, setTeacherId] = useState('');
   const [teacherPassword, setTeacherPassword] = useState('');
   const [teacherSchoolCode, setTeacherSchoolCode] = useState('');
@@ -96,17 +96,16 @@ export default function SuperAdminPage() {
     
     setIsCreatingTeacher(true);
     try {
-      const auth = getAuth();
-      const email = `${teacherId}@${teacherSchoolCode.toLowerCase()}.teacher.school.com`;
-      await createUserWithEmailAndPassword(auth, email, teacherPassword);
-      alert(`Cuenta de profesor creada exitosamente para el colegio ${teacherSchoolCode}. Ya puede iniciar sesión.`);
+      const email = `${teacherId}@${teacherSchoolCode.toLowerCase()}.admin.school.com`;
+      await createUserWithEmailAndPassword(secondaryAuth, email, teacherPassword);
+      alert(`Cuenta de Administrador creada exitosamente para el colegio ${teacherSchoolCode}. Ya puede iniciar sesión.`);
       setTeacherId('');
       setTeacherPassword('');
       setTeacherSchoolCode('');
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
-        alert('Ese profesor ya tiene una cuenta en este colegio. Intenta iniciar sesión con sus credenciales.');
+        alert('Ese usuario ya tiene una cuenta. Intenta iniciar sesión con sus credenciales.');
       } else {
         alert('Error al crear la cuenta: ' + err.message);
       }
@@ -190,10 +189,12 @@ export default function SuperAdminPage() {
           </div>
         </div>
 
-        {/* Formulario de Crear Cuenta Profesor */}
-        <div className="glass-panel" style={{ flex: '1 1 300px', height: 'fit-content' }}>
-          <h2>Crear Cuenta de Profesor/Rector</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Crea el primer usuario administrador para un colegio.</p>
+        {/* Crear cuenta de Administrador */}
+        <section className="glass-panel" style={{ flex: '1 1 300px', height: 'fit-content' }}>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Crear Administrador del Colegio</h2>
+          <p className="text-muted" style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
+            Asigna un acceso de Administrador (Director) para un colegio existente. El Administrador podrá luego crear a sus propios docentes.
+          </p>
           <form onSubmit={handleCreateTeacher} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
             <div>
               <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Código del Colegio</label>
@@ -233,7 +234,7 @@ export default function SuperAdminPage() {
               {isCreatingTeacher ? 'Creando...' : 'Crear Cuenta Docente'}
             </button>
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
         // Mejor: Si usan email, su rol está en el custom token o tenemos que buscar en las colecciones.
         // Para simplificar: No sabemos su rol a priori. Lo buscaremos.
       } else {
-        const roles = ['teacher', 'student', 'parent'];
+        const roles = ['admin', 'teacher', 'student', 'parent'];
         for (const currentRole of roles) {
           try {
             const email = `${idNumber}@${schoolCode.toLowerCase()}.${currentRole}.school.com`;
@@ -72,7 +72,9 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
       localStorage.setItem('userRole', finalRole);
       
       // Redirigir según el rol detectado
-      if (finalRole === 'teacher') {
+      if (finalRole === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (finalRole === 'teacher') {
         router.push('/teacher/dashboard');
       } else {
         // Para parent o student, buscamos el ID del estudiante para mostrar su perfil

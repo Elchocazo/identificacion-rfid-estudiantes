@@ -14,6 +14,11 @@ const firebaseConfig = {
 // Initialize Firebase (only once to prevent duplicate app errors in Next.js)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
+// Initialize Secondary App for user creation (prevents current user from logging out)
+const secondaryApp = getApps().find(a => a.name === 'SecondaryApp') 
+  || initializeApp(firebaseConfig, 'SecondaryApp');
+
 // Export instances of Firebase services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const secondaryAuth = getAuth(secondaryApp);
