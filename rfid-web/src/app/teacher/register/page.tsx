@@ -13,6 +13,12 @@ export default function RegisterStudentPage() {
   const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'teacher' && userRole !== 'admin') {
+      router.push('/');
+      return;
+    }
+    
     // Escuchar Tarjetas Pendientes para autollenar el UID
     const qPending = query(collection(db, 'pending_registrations'), orderBy('timestamp', 'desc'), limit(1));
     const unsubPending = onSnapshot(qPending, (snapshot) => {
@@ -29,7 +35,8 @@ export default function RegisterStudentPage() {
     e.preventDefault();
     setIsRegistering(true);
     try {
-      const payload = { ...regData, schoolId: schoolId };
+      const schoolCode = localStorage.getItem('schoolCode') || '';
+      const payload = { ...regData, schoolId: schoolCode };
       
       const res = await fetch('/api/students/register', {
         method: 'POST',
