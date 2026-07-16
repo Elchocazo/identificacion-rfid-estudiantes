@@ -2,6 +2,8 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
+let initError: any = null;
+
 if (!getApps().length) {
   try {
     const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
@@ -20,16 +22,28 @@ if (!getApps().length) {
         }),
       });
     } else {
-      console.warn('Missing Firebase Env Vars. Using demo project.');
-      initializeApp({ projectId: 'demo-project' });
+      initError = new Error('Faltan variables de entorno para Firebase Admin');
     }
   } catch (error) {
     console.error('Firebase admin init error', error);
-    if (!getApps().length) {
-      initializeApp({ projectId: 'demo-project' });
-    }
+    initError = error;
   }
 }
 
-export const adminDb = getFirestore();
-export const adminAuth = getAuth();
+export const adminDb = new Proxy({}, {
+  get(target, prop) {
+    if (initError) throw initError;
+    const db = getFirestore() as any;
+    const value = db[prop];
+    return typeof value === 'function' ? value.bind(db) : value;
+  }
+}) as FirebaseFirestore.Firestore;
+
+export const adminAuth = new Proxy({}, {
+  get(target, prop) {
+    if (initError) throw initError;
+    const auth = getAuth() as any;
+    const value = auth[prop];
+    return typeof value === 'function' ? value.bind(auth) : value;
+  }
+}) as ReturnType<typeof getAuth>;
