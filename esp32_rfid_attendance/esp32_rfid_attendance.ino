@@ -21,7 +21,7 @@ const String apiUrl = "https://identificacion-rfid-estudiantes.vercel.app/api/at
 // CONFIGURACIÓN DEL LECTOR RFID (Pines para ESP32)
 // ---------------------------------------------------------
 #define RST_PIN 22
-#define SS_PIN 21
+#define SS_PIN 5
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // Pines para LEDs y Buzzer (Opcional, déjalos así si no tienes conectados LEDs)
