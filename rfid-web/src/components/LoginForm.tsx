@@ -7,11 +7,12 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 interface LoginFormProps {
-  role: 'teacher' | 'parent';
-  title: string;
+  initialRole?: 'teacher' | 'parent';
+  title?: string;
 }
 
-export default function LoginForm({ role, title }: LoginFormProps) {
+export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Sesión' }: LoginFormProps) {
+  const [role, setRole] = useState<'teacher' | 'parent'>(initialRole);
   const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
   const [schoolCode, setSchoolCode] = useState('');
@@ -69,6 +70,28 @@ export default function LoginForm({ role, title }: LoginFormProps) {
       )}
 
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        
+        {/* Selector de Rol */}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+          <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input 
+              type="radio" 
+              name="role" 
+              checked={role === 'teacher'} 
+              onChange={() => setRole('teacher')} 
+            />
+            <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>Profesor</span>
+          </label>
+          <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input 
+              type="radio" 
+              name="role" 
+              checked={role === 'parent'} 
+              onChange={() => setRole('parent')} 
+            />
+            <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>Acudiente</span>
+          </label>
+        </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             Código del Colegio
