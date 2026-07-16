@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Crear usuario en Firebase Auth usando REST API (Para evitar bug de ESM en Vercel)
-    const email = `${idNumber}@colegio.com`;
+    const email = `${idNumber}@${schoolId.toLowerCase()}.student.school.com`;
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyCPxk-FI1hYo3CrACV9NHl7uDgqcxVpHfM";
     
     const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {

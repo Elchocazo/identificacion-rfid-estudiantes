@@ -50,6 +50,18 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
             // Si falla, el loop continúa con el siguiente rol
           }
         }
+        
+        // Fallback para usuarios antiguos registrados con el dominio @colegio.com
+        if (!loginSuccess) {
+          try {
+            const fallbackEmail = `${idNumber}@colegio.com`;
+            await signInWithEmailAndPassword(auth, fallbackEmail, password);
+            loginSuccess = true;
+            finalRole = 'student'; // Asumimos estudiante para estos correos antiguos
+          } catch (err: any) {
+             // Falló también
+          }
+        }
       }
 
       if (!loginSuccess) {

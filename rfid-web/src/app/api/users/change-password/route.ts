@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     // Si no enviaron targetUid pero sí datos del estudiante (caso de perfiles antiguos)
     if (!uidToUpdate && firestoreStudentId && idNumber) {
-      const email = `${idNumber}@colegio.com`;
+      const email = `${idNumber}@${(schoolId || 'chmd').toLowerCase()}.student.school.com`;
       try {
         // Intentar buscar si el usuario ya existe en Auth por email
         const userRecord = await getAuth().getUserByEmail(email);
