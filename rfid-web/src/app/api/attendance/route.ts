@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       // Enviar WhatsApp al llegar a 3 tardes en el periodo
       if (totalLateInPeriod === 3) {
         try {
-          const datesList = pastLateRecords.map(r => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
+          const datesList = pastLateRecords.map((r: any) => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
           datesList.sort((a, b) => a.getTime() - b.getTime()); // ordenar cronológicamente
           
           const formattedDates = datesList.map((d: Date, i: number) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
