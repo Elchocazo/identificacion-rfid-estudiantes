@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,8 @@ export default function RegisterStudentPage() {
   });
   const [isRegistering, setIsRegistering] = useState(false);
 
+  const ignoredPendingIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'teacher' && userRole !== 'admin') {
@@ -19,17 +21,34 @@ export default function RegisterStudentPage() {
       return;
     }
     
-    // Escuchar Tarjetas Pendientes para autollenar el UID
+    // Escuchar Tarjetas Pendientes nuevas
     const qPending = query(collection(db, 'pending_registrations'), orderBy('timestamp', 'desc'), limit(1));
     const unsubPending = onSnapshot(qPending, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-      if (data.length > 0 && regData.uid === '') {
-        setRegData(prev => ({ ...prev, uid: data[0].uid, pendingId: data[0].id }));
+      if (data.length > 0) {
+        const latest = data[0];
+        
+        // Verificar que sea reciente (últimos 15 min) para no jalar basura vieja
+        let isRecent = true;
+        if (latest.timestamp && latest.timestamp.toDate) {
+          const now = new Date();
+          const scanTime = latest.timestamp.toDate();
+          isRecent = (now.getTime() - scanTime.getTime()) < 15 * 60 * 1000;
+        }
+
+        if (isRecent && latest.id !== ignoredPendingIdRef.current) {
+          setRegData(prev => {
+            if (prev.uid === '') {
+              return { ...prev, uid: latest.uid, pendingId: latest.id };
+            }
+            return prev;
+          });
+        }
       }
     });
 
     return () => unsubPending();
-  }, [regData.uid]);
+  }, []);
 
   const handleRegisterStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +93,12 @@ export default function RegisterStudentPage() {
               <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold' }}>UID de la Tarjeta (Pasa la tarjeta por el lector)</label>
               <input type="text" className="input-field" value={regData.uid} onChange={e => setRegData({...regData, uid: e.target.value})} required placeholder="Esperando tarjeta..." style={{ background: 'white', fontWeight: 'bold', letterSpacing: '1px' }} />
             </div>
-            <button type="button" onClick={() => setRegData({...regData, uid: '', pendingId: ''})} className="btn-secondary" style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Limpiar y esperar nueva tarjeta">
+            <button type="button" onClick={() => {
+              if (regData.pendingId) {
+                ignoredPendingIdRef.current = regData.pendingId;
+              }
+              setRegData({...regData, uid: '', pendingId: ''});
+            }} className="btn-secondary" style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Limpiar y esperar nueva tarjeta">
               🔄
             </button>
           </div>
