@@ -83,8 +83,8 @@ export async function POST(request: Request) {
       const totalLateInPeriod = pastLateRecords.length; // Ya incluye la de hoy porque acabamos de guardarla
       lateArrivals = totalLateInPeriod; 
       
-      // Enviar WhatsApp a partir de la 3ra llegada tarde en el periodo
-      if (totalLateInPeriod >= 3) {
+      // Enviar WhatsApp cada vez que llega tarde (a partir de la 1ra vez)
+      if (totalLateInPeriod >= 1) {
         try {
           const datesList: Date[] = pastLateRecords.map((r: any) => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
           datesList.sort((a: Date, b: Date) => a.getTime() - b.getTime()); // ordenar cronológicamente
