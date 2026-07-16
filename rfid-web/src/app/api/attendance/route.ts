@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         .where('isLate', '==', true)
         .get();
         
-      const pastLateRecords = lateRecordsSnap.docs.map(d => d.data());
+      const pastLateRecords = lateRecordsSnap.docs.map((d: any) => d.data());
       
       const totalLateInPeriod = pastLateRecords.length; // Ya incluye la de hoy porque acabamos de guardarla
       lateArrivals = totalLateInPeriod; 
