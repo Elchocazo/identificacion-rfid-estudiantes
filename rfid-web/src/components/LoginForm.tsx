@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface LoginFormProps {
@@ -17,6 +17,7 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,10 +87,9 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
         
         if (!snapshot.empty) {
           const studentId = snapshot.docs[0].id;
-          // Guardamos en localstorage el id del estudiante
+          localStorage.setItem('studentId', studentId);
           router.push(`/parent/dashboard/${studentId}`);
         } else {
-          // Si no encuentra al estudiante, que vaya al root (esto no debería pasar en datos sanos)
           router.push('/');
         }
       }
@@ -100,6 +100,25 @@ export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps)
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const finalRole = localStorage.getItem('userRole');
+        const studentId = localStorage.getItem('studentId');
+        
+        // Si el usuario vuelve a '/' y ya está logueado, redirigirlo a su dashboard
+        if (finalRole === 'admin') {
+          router.replace('/admin/dashboard');
+        } else if (finalRole === 'teacher') {
+          router.replace('/teacher/dashboard');
+        } else if ((finalRole === 'parent' || finalRole === 'student') && studentId) {
+          router.replace(`/parent/dashboard/${studentId}`);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   return (
     <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
