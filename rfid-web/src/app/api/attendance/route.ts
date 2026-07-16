@@ -83,8 +83,8 @@ export async function POST(request: Request) {
       const totalLateInPeriod = pastLateRecords.length; // Ya incluye la de hoy porque acabamos de guardarla
       lateArrivals = totalLateInPeriod; 
       
-      // Enviar WhatsApp al llegar a 3 tardes en el periodo
-      if (totalLateInPeriod === 3) {
+      // Enviar WhatsApp a partir de la 3ra llegada tarde en el periodo
+      if (totalLateInPeriod >= 3) {
         try {
           const datesList: Date[] = pastLateRecords.map((r: any) => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
           datesList.sort((a: Date, b: Date) => a.getTime() - b.getTime()); // ordenar cronológicamente
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
           const formattedDates = datesList.map((d: Date, i: number) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
 
           const finalPhone = '573015085806'; 
-          const message = encodeURIComponent(`🚨 *Alerta de Colegio*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde en el Periodo ${currentPeriod}.\n\n*Historial de llegadas:*\n${formattedDates}`);
+          const message = encodeURIComponent(`🚨 *Alerta de Colegio*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su llegada tarde número ${totalLateInPeriod} en el Periodo ${currentPeriod}.\n\n*Historial de llegadas:*\n${formattedDates}`);
           const apiKey = process.env.CALLMEBOT_API_KEY || '1538587';
           
           fetch(`https://api.callmebot.com/whatsapp.php?phone=${finalPhone}&text=${message}&apikey=${apiKey}`);
