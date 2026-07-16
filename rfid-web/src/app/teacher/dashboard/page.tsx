@@ -22,10 +22,13 @@ export default function TeacherDashboard() {
       return;
     }
 
-    // Escuchar Asistencias en tiempo real
-    const qAttend = query(collection(db, 'attendance'), where('schoolId', '==', schoolCode), orderBy('timestamp', 'desc'), limit(15));
+    // Escuchar Asistencias en tiempo real (evitando composite index)
+    const qAttend = query(collection(db, 'attendance'), orderBy('timestamp', 'desc'), limit(50));
     const unsubAttend = onSnapshot(qAttend, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      const data = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as any))
+        .filter(att => att.schoolId === schoolCode)
+        .slice(0, 15);
       setAttendances(data);
     });
 
