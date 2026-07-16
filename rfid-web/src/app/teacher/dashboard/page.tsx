@@ -10,6 +10,7 @@ export default function TeacherDashboard() {
   const router = useRouter();
   const [attendances, setAttendances] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Configuraciones globales para el header
   const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
@@ -62,22 +63,35 @@ export default function TeacherDashboard() {
       return;
     }
 
-    const dataToExport = attendances.map(att => {
-      const dateObj = att.timestamp?.toDate ? att.timestamp.toDate() : new Date();
-      return {
-        'Fecha': dateObj.toLocaleDateString(),
-        'Hora': dateObj.toLocaleTimeString(),
-        'Estudiante': att.studentName || 'Desconocido',
-        'Grado/Curso': att.studentGrade || 'No asignado',
-        'Periodo': att.period || 1,
-        'Estado': att.isLate ? 'LLEGADA TARDE' : att.type.toUpperCase()
-      };
-    });
+    setIsExporting(true);
+    
+    // Usamos setTimeout para permitir que React actualice la UI (el estado de "Exportando...") 
+    // antes de bloquear el hilo principal con la generación del Excel pesado.
+    setTimeout(() => {
+      try {
+        const dataToExport = attendances.map(att => {
+          const dateObj = att.timestamp?.toDate ? att.timestamp.toDate() : new Date();
+          return {
+            'Fecha': dateObj.toLocaleDateString(),
+            'Hora': dateObj.toLocaleTimeString(),
+            'Estudiante': att.studentName || 'Desconocido',
+            'Grado/Curso': att.studentGrade || 'No asignado',
+            'Periodo': att.period || 1,
+            'Estado': att.isLate ? 'LLEGADA TARDE' : att.type.toUpperCase()
+          };
+        });
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Asistencia');
-    XLSX.writeFile(workbook, `Reporte_Asistencia_${new Date().toISOString().split('T')[0]}.xlsx`);
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Asistencia');
+        XLSX.writeFile(workbook, `Reporte_Asistencia_${new Date().toISOString().split('T')[0]}.xlsx`);
+      } catch (err) {
+        console.error('Error exportando:', err);
+        alert('Hubo un error al exportar el archivo.');
+      } finally {
+        setIsExporting(false);
+      }
+    }, 50);
   };
 
   return (
@@ -88,7 +102,9 @@ export default function TeacherDashboard() {
           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{settings.schoolName} - Periodo {settings.currentPeriod}</span>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button className="btn-secondary" onClick={handleExportExcel} style={{ background: '#10b981', color: 'white', borderColor: '#10b981' }}>📊 Descargar Excel</button>
+          <button className="btn-secondary" onClick={handleExportExcel} disabled={isExporting} style={{ background: isExporting ? '#6ee7b7' : '#10b981', color: 'white', borderColor: isExporting ? '#6ee7b7' : '#10b981' }}>
+            {isExporting ? '⏳ Generando...' : '📊 Descargar Excel'}
+          </button>
           <button className="btn-secondary" onClick={() => router.push('/teacher/settings')} title="Configuración">⚙️</button>
           <button className="btn-primary" onClick={() => router.push('/teacher/register')}>➕ Agregar Estudiante</button>
           <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
