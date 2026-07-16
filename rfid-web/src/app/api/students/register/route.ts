@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
-import { adminAuth } from '@/lib/firebaseAuth';
 
 export async function POST(request: Request) {
   try {
@@ -24,24 +23,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
-    // 1. Crear usuario en Firebase Auth (Para el estudiante)
+    // 1. Crear usuario en Firebase Auth usando REST API (Para evitar bug de ESM en Vercel)
     const email = `${idNumber}@colegio.com`;
-    let userRecord;
-    try {
-      userRecord = await adminAuth.createUser({
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyCPxk-FI1hYo3CrACV9NHl7uDgqcxVpHfM";
+    
+    const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         email: email,
-        password: idNumber, // Contraseña por defecto es su número de ID
-        displayName: `${firstName} ${lastName}`
-      });
-    } catch (authError: any) {
-      if (authError.code === 'auth/email-already-exists') {
+        password: idNumber,
+        returnSecureToken: true
+      })
+    });
+    
+    const authData = await authRes.json();
+    
+    if (!authRes.ok) {
+      if (authData.error?.message === 'EMAIL_EXISTS') {
         return NextResponse.json({ error: 'Ya existe un usuario con este documento.' }, { status: 400 });
       }
-      throw authError;
+      throw new Error(`Auth Error: ${authData.error?.message || 'Unknown'}`);
     }
+    
+    // Si queremos actualizar el displayName, podríamos hacer otra llamada a setAccountInfo,
+    // pero no es estrictamente necesario ya que los datos están en Firestore.
+    const uidAuth = authData.localId;
 
     // 2. Guardar el rol (student) y el acceso del padre (parent)
-    await adminDb.collection('user_roles').doc(userRecord.uid).set({
+    await adminDb.collection('user_roles').doc(uidAuth).set({
       role: 'student',
       schoolCode: schoolId
     });
@@ -49,7 +59,7 @@ export async function POST(request: Request) {
     // 3. Crear el documento del estudiante en Firestore
     await adminDb.collection('students').add({
       uid,
-      studentAuthId: userRecord.uid, // ID del estudiante para que pueda iniciar sesión
+      studentAuthId: uidAuth, // ID del estudiante para que pueda iniciar sesión
       firstName,
       lastName,
       birthday: birthday || '',
