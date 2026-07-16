@@ -17,7 +17,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const schoolCode = localStorage.getItem('schoolCode') || '';
     if (!schoolCode) {
-      router.push('/teacher/login');
+      router.push('/');
       return;
     }
 

@@ -13,7 +13,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const schoolCode = localStorage.getItem('schoolCode');
     if (!schoolCode) {
-      router.push('/teacher/login');
+      router.push('/');
       return;
     }
 
