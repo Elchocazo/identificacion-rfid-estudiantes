@@ -15,6 +15,7 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [schoolName, setSchoolName] = useState('Colegio Hogar Madre de Dios');
+  const [userRole, setUserRole] = useState('');
   
   const [activeTab, setActiveTab] = useState<'historial' | 'observaciones'>('historial');
   const [newObservation, setNewObservation] = useState('');
@@ -35,6 +36,8 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setUserRole(localStorage.getItem('userRole') || '');
+        
         // Fetch Student
         const studentRef = doc(db, 'students', studentId);
         const studentSnap = await getDoc(studentRef);
@@ -252,9 +255,11 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
         <div className={`profile-tab ${activeTab === 'historial' ? 'active' : ''}`} onClick={() => setActiveTab('historial')}>
           📁 Historial de Asistencia
         </div>
-        <div className={`profile-tab ${activeTab === 'observaciones' ? 'active' : ''}`} onClick={() => setActiveTab('observaciones')}>
-          📋 Observaciones
-        </div>
+        {userRole !== 'student' && (
+          <div className={`profile-tab ${activeTab === 'observaciones' ? 'active' : ''}`} onClick={() => setActiveTab('observaciones')}>
+            📋 Observaciones
+          </div>
+        )}
       </section>
 
       {/* TAB CONTENT */}

@@ -52,11 +52,16 @@ export default function SettingsPage() {
 
   return (
     <div className="container animate-fade-in" style={{ padding: '4rem 2rem', maxWidth: '800px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-        <h1 className="text-gradient" style={{ margin: 0, fontSize: '2.5rem' }}>Configuración Global</h1>
-        <button onClick={() => router.push('/teacher/dashboard')} className="btn-secondary">
-          Atrás al Panel
-        </button>
+      <header style={{ marginBottom: '3rem' }}>
+        <h1 className="text-gradient" style={{ margin: '0 0 1rem 0', fontSize: '2.5rem' }}>Configuración Global</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <button onClick={() => router.push('/teacher/dashboard')} className="btn-secondary">
+            ← Volver
+          </button>
+          <button onClick={() => router.push('/settings')} className="btn-secondary" style={{ background: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}>
+            Configuración de Cuenta (Contraseña/Correo) →
+          </button>
+        </div>
       </header>
 
       <div style={{ background: 'var(--beige-card)', padding: '3rem', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid var(--beige-dark)' }}>

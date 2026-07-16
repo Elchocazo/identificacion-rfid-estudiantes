@@ -26,30 +26,26 @@ export async function POST(request: Request) {
     }
 
     // 1. Crear el usuario del padre en Firebase Auth
-    // Usamos el ID del padre como contraseña
     const parentEmail = `${parentId}@${schoolId.toLowerCase()}.parent.school.com`;
-    const parentPassword = parentId; // El usuario pidió que el login sea con identificacion y contraseña que sea la misma?
-    // Wait, el usuario dijo "ingresar con el numero de identificacion y la contraseña que sea 36274528".
-    // Eso fue para el admin, pero para los padres tal vez quieran usar su identificacion como contraseña, 
-    // o "36274528" para todos? Para cumplir el minimo de 6 caracteres, usamos la identificacion si tiene > 5 chars,
-    // pero para asegurar, usaremos el mismo password genérico o la identificación si es más larga.
-    // Usaremos la identificación. Si falla, el cliente lo atrapará.
-    
-    // Mejor aún, le daremos la misma contraseña genérica `36274528` a todos los padres por defecto para simplificar,
-    // O dejamos que la contraseña sea la identificación + "00" si es muy corta.
-    let finalPassword = parentId;
-    if (finalPassword.length < 6) {
-      finalPassword = finalPassword + "000000";
+    let parentPassword = parentId;
+    if (parentPassword.length < 6) parentPassword += "000000";
+
+    const auth = getAuth();
+    try {
+      await createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
+    } catch (authError: any) {
+      if (authError.code !== 'auth/email-already-in-use') throw authError;
     }
 
+    // 1.5 Crear el usuario del estudiante en Firebase Auth
+    const studentEmail = `${idNumber}@${schoolId.toLowerCase()}.student.school.com`;
+    let studentPassword = idNumber;
+    if (studentPassword.length < 6) studentPassword += "000000";
+
     try {
-      const auth = getAuth();
-      await createUserWithEmailAndPassword(auth, parentEmail, finalPassword);
+      await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
     } catch (authError: any) {
-      // Ignorar si el usuario ya existe (ej. el padre ya tiene otro hijo registrado)
-      if (authError.code !== 'auth/email-already-in-use') {
-        throw authError;
-      }
+      if (authError.code !== 'auth/email-already-in-use') throw authError;
     }
 
     // 2. Guardar el estudiante en Firestore
@@ -81,7 +77,7 @@ export async function POST(request: Request) {
       success: true, 
       message: 'Estudiante registrado correctamente', 
       studentId: newStudent.id,
-      parentPassword: finalPassword // Devuelve la contraseña asignada por si se necesita
+      parentPassword: parentPassword // Devuelve la contraseña asignada por si se necesita
     }, { status: 200 });
 
   } catch (error: any) {

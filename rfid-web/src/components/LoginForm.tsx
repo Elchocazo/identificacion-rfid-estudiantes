@@ -3,16 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface LoginFormProps {
-  initialRole?: 'teacher' | 'parent';
   title?: string;
 }
 
-export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Sesión' }: LoginFormProps) {
-  const [role, setRole] = useState<'teacher' | 'parent'>(initialRole);
+export default function LoginForm({ title = 'Iniciar Sesión' }: LoginFormProps) {
   const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
   const [schoolCode, setSchoolCode] = useState('');
@@ -26,29 +24,71 @@ export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Se
     setLoading(true);
 
     try {
-      // Usando el código del colegio en el correo electrónico simulado
-      // Ejemplo: 123456@san_jose.teacher.school.com
-      const email = `${idNumber}@${schoolCode.toLowerCase()}.${role}.school.com`;
+      const isEmail = idNumber.includes('@');
+      let loginSuccess = false;
+      let finalRole = '';
+
+      if (isEmail) {
+        // Log in directly with email
+        await signInWithEmailAndPassword(auth, idNumber, password);
+        loginSuccess = true;
+        // Determinaremos el rol después basándonos en la base de datos o dejaremos que el flujo lo descubra
+        // Pero para mantener la lógica actual, asumimos que si usan email, tenemos que buscar quiénes son.
+        // Mejor: Si usan email, su rol está en el custom token o tenemos que buscar en las colecciones.
+        // Para simplificar: No sabemos su rol a priori. Lo buscaremos.
+      } else {
+        const roles = ['teacher', 'student', 'parent'];
+        for (const currentRole of roles) {
+          try {
+            const email = `${idNumber}@${schoolCode.toLowerCase()}.${currentRole}.school.com`;
+            await signInWithEmailAndPassword(auth, email, password);
+            loginSuccess = true;
+            finalRole = currentRole;
+            break; // Salir del loop si fue exitoso
+          } catch (err: any) {
+            // Si falla, el loop continúa con el siguiente rol
+          }
+        }
+      }
+
+      if (!loginSuccess) {
+        throw new Error('Credenciales inválidas');
+      }
+
+      // Si inició sesión con email, necesitamos descubrir su rol
+      if (isEmail && !finalRole) {
+        const userDoc = await getDoc(doc(db, 'user_roles', auth.currentUser!.uid));
+        if (userDoc.exists()) {
+          finalRole = userDoc.data().role;
+          setSchoolCode(userDoc.data().schoolCode);
+        } else {
+          // Fallback por defecto si algo falla, no debería pasar si vincularon correctamente.
+          throw new Error('No se encontró el rol para este correo. Contacta soporte.');
+        }
+      }
       
-      // Guardar el código del colegio en localStorage para usarlo en otras partes de la app (Dashboard, Settings)
+      // Guardar el código del colegio en localStorage
       localStorage.setItem('schoolCode', schoolCode.toUpperCase());
+      localStorage.setItem('userRole', finalRole);
       
-      await signInWithEmailAndPassword(auth, email, password);
-      
-      // Redirigir según el rol
-      if (role === 'teacher') {
+      // Redirigir según el rol detectado
+      if (finalRole === 'teacher') {
         router.push('/teacher/dashboard');
       } else {
-        // Para el padre, necesitamos buscar el ID del estudiante para mostrar su perfil
+        // Para parent o student, buscamos el ID del estudiante para mostrar su perfil
         const studentsRef = collection(db, 'students');
-        const q = query(studentsRef, where('idNumber', '==', idNumber));
+        // Si es padre, buscamos por parentId, si es estudiante, por idNumber
+        const queryField = finalRole === 'parent' ? 'parentId' : 'idNumber';
+        const q = query(studentsRef, where(queryField, '==', idNumber));
         const snapshot = await getDocs(q);
         
         if (!snapshot.empty) {
           const studentId = snapshot.docs[0].id;
+          // Guardamos en localstorage el id del estudiante
           router.push(`/parent/dashboard/${studentId}`);
         } else {
-          router.push('/parent/dashboard');
+          // Si no encuentra al estudiante, que vaya al root (esto no debería pasar en datos sanos)
+          router.push('/');
         }
       }
     } catch (err: any) {
@@ -70,28 +110,6 @@ export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Se
       )}
 
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        
-        {/* Selector de Rol */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-          <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <input 
-              type="radio" 
-              name="role" 
-              checked={role === 'teacher'} 
-              onChange={() => setRole('teacher')} 
-            />
-            <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>Profesor</span>
-          </label>
-          <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <input 
-              type="radio" 
-              name="role" 
-              checked={role === 'parent'} 
-              onChange={() => setRole('parent')} 
-            />
-            <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>Acudiente</span>
-          </label>
-        </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             Código del Colegio
@@ -107,7 +125,7 @@ export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Se
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-            Número de Identificación
+            Identificación o Correo Registrado
           </label>
           <input
             type="text"
@@ -115,7 +133,7 @@ export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Se
             className="input-field"
             value={idNumber}
             onChange={(e) => setIdNumber(e.target.value)}
-            placeholder="Ej. 10203040"
+            placeholder="Ej. 10203040 o correo@gmail.com"
           />
         </div>
         <div>
@@ -128,12 +146,33 @@ export default function LoginForm({ initialRole = 'teacher', title = 'Iniciar Se
             className="input-field"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="********"
+            placeholder="Tu contraseña"
           />
         </div>
         
-        <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
-          {loading ? 'Ingresando...' : 'Iniciar Sesión'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button 
+            type="button" 
+            onClick={async () => {
+              if (!idNumber.includes('@')) {
+                alert('Debes ingresar tu correo registrado en el campo de arriba para poder restablecer la contraseña.');
+                return;
+              }
+              try {
+                await sendPasswordResetEmail(auth, idNumber);
+                alert('Se ha enviado un enlace de recuperación a tu correo.');
+              } catch (e: any) {
+                alert('Error al enviar el correo. Verifica que esté bien escrito y registrado.');
+              }
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--navy-blue)', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+
+        <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '0.5rem' }}>
+          {loading ? 'Iniciando...' : 'Entrar al Panel'}
         </button>
       </form>
     </div>

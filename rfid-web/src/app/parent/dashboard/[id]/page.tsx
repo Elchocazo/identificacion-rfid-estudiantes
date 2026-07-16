@@ -10,7 +10,8 @@ export default function ParentDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
-      <div style={{ padding: '1rem', display: 'flex', justifyContent: 'flex-end', maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ padding: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', maxWidth: '900px', margin: '0 auto' }}>
+        <button className="btn-secondary" onClick={() => router.push('/settings')} title="Configuración de Cuenta">⚙️ Configuración</button>
         <button className="btn-secondary" onClick={() => router.push('/')}>Cerrar Sesión</button>
       </div>
       {id && <StudentProfile studentId={id} isAdmin={false} />}
