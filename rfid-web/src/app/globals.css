@@ -1,24 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #0ea5e9;       /* Azul celeste */
-  --primary-hover: #0284c7; /* Azul más oscuro para hover */
-  --secondary: #38bdf8;     /* Celeste claro */
-  --background: #fcf9f2;    /* Beige cremoso */
-  --surface: #ffffff;       /* Blanco puro para paneles */
-  --surface-hover: #f1f5f9; /* Gris muy claro para hover */
-  --text-main: #1e293b;     /* Texto oscuro principal */
-  --text-muted: #64748b;    /* Texto secundario gris */
-  --border: #e2e8f0;        /* Borde gris sutil */
+  /* Claymorphism pastel colors */
+  --primary: #3b82f6;       
+  --primary-hover: #2563eb; 
+  --secondary: #0ea5e9;     
+  --background: #f1f5f9;    /* Light gray/blue base */
+  --surface: #e2e8f0;       /* Slightly darker for panels */
+  --surface-hover: #cbd5e1; 
+  --text-main: #334155;     
+  --text-muted: #64748b;    
+  --border: transparent;        
   
   /* Nuevos colores para el diseño de Perfil */
-  --navy-blue: #1e3a5f;     /* Azul marino oscuro */
-  --beige-card: #f8f3ea;    /* Beige ligeramente más oscuro para tarjetas */
-  --beige-dark: #e8dfcc;    /* Beige para sombras/bordes */
+  --navy-blue: #1e3a5f;     
+  --beige-card: #f8fafc;    
+  --beige-dark: #cbd5e1;    
   
-  --glass-blur: 12px;
-  --radius-lg: 16px;
-  --radius-md: 12px;
+  --radius-lg: 32px;
+  --radius-md: 20px;
 }
 
 * {
@@ -44,74 +44,111 @@ button {
   font-family: inherit;
 }
 
-/* Glassmorphism Classes */
+/* CLAYMORPHISM Classes */
 .glass-panel {
-  background: var(--surface);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--border);
+  background: var(--background);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, background 0.3s ease;
+  padding: 2.5rem;
+  box-shadow: 
+    12px 12px 24px rgba(166, 180, 200, 0.7), 
+    -12px -12px 24px #ffffff,
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(166, 180, 200, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
 }
 
 .glass-panel:hover {
   transform: translateY(-2px);
-  background: var(--surface-hover);
+  box-shadow: 
+    16px 16px 32px rgba(166, 180, 200, 0.8), 
+    -16px -16px 32px #ffffff,
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(166, 180, 200, 0.2);
 }
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: var(--primary);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+  transition: all 0.2s ease;
+  box-shadow: 
+    6px 6px 12px rgba(59, 130, 246, 0.4), 
+    -6px -6px 12px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+  box-shadow: 
+    8px 8px 16px rgba(59, 130, 246, 0.5), 
+    -8px -8px 16px rgba(255, 255, 255, 0.9),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.4);
 }
 
 .btn-secondary {
-  background: var(--surface);
+  background: var(--background);
   color: var(--text-main);
-  border: 1px solid var(--border);
-  padding: 0.75rem 1.5rem;
+  border: none;
+  padding: 1rem 2rem;
   border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  box-shadow: 
+    6px 6px 12px rgba(166, 180, 200, 0.5), 
+    -6px -6px 12px #ffffff,
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 4px rgba(166, 180, 200, 0.1);
 }
 
 .btn-secondary:hover {
-  background: var(--surface-hover);
-  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 4px 4px 8px rgba(166, 180, 200, 0.4),
+    inset -4px -4px 8px #ffffff;
 }
 
 /* Inputs */
 .input-field {
   width: 100%;
-  padding: 1rem;
-  background: #ffffff;
-  border: 1px solid var(--border);
+  padding: 1.2rem;
+  background: var(--background);
+  border: none;
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   font-family: inherit;
+  box-shadow: 
+    inset 6px 6px 12px rgba(166, 180, 200, 0.6),
+    inset -6px -6px 12px #ffffff;
+  transition: all 0.3s ease;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+  box-shadow: 
+    inset 8px 8px 16px rgba(166, 180, 200, 0.7),
+    inset -8px -8px 16px #ffffff,
+    0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 /* Layout Utilities */
@@ -128,7 +165,7 @@ button {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--text-main));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -149,34 +186,40 @@ button {
 
 /* Utilities para el nuevo Perfil */
 .profile-pill {
-  background: var(--beige-card);
-  border: 1px solid var(--beige-dark);
+  background: var(--background);
   border-radius: 20px;
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-main);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 
+    4px 4px 8px rgba(166, 180, 200, 0.5), 
+    -4px -4px 8px #ffffff;
 }
 
 .profile-tab {
-  background: var(--beige-card);
-  border: 2px solid transparent;
-  color: var(--navy-blue);
+  background: var(--background);
+  color: var(--text-muted);
   font-weight: 700;
   border-radius: 30px;
-  padding: 0.8rem 2rem;
+  padding: 1rem 2.5rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  border: none;
+  box-shadow: 
+    4px 4px 8px rgba(166, 180, 200, 0.5), 
+    -4px -4px 8px #ffffff;
 }
 
 .profile-tab.active {
-  background: var(--navy-blue);
+  background: var(--primary);
   color: white;
-  border-color: var(--navy-blue);
+  box-shadow: 
+    inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.4);
 }

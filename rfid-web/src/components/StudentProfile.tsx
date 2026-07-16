@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 interface StudentProfileProps {
   studentId: string;
@@ -23,6 +24,31 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
   const [tempSchoolName, setTempSchoolName] = useState('');
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  const handleDeleteStudent = async () => {
+    if (!isAdmin) return;
+    const confirmDelete = window.confirm("¿Estás seguro de que deseas borrar este estudiante? La tarjeta quedará libre para ser asignada nuevamente.");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch('/api/students/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Estudiante borrado exitosamente.");
+        router.push('/admin/dashboard');
+      } else {
+        alert("Error al borrar: " + data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de red al intentar borrar.");
+    }
+  };
 
   const fetchNotes = async () => {
     const notesRef = collection(db, 'notes');
@@ -153,6 +179,15 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
         <h1 style={{ color: 'var(--text-main)', textAlign: 'center', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {schoolName}
         </h1>
+        {isAdmin && (
+          <button 
+            onClick={handleDeleteStudent} 
+            className="btn-primary" 
+            style={{ position: 'absolute', right: 0, background: '#ef4444', color: 'white', boxShadow: 'none' }}
+          >
+            🗑️ Borrar Estudiante
+          </button>
+        )}
       </header>
 
       {/* TOP SECTION: FOTO Y DATOS */}
