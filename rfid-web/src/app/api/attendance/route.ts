@@ -89,7 +89,8 @@ export async function POST(request: Request) {
           const datesList: Date[] = pastLateRecords.map((r: any) => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
           datesList.sort((a: Date, b: Date) => a.getTime() - b.getTime()); // ordenar cronológicamente
           
-          const formattedDates = datesList.map((d: Date, i: number) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
+          const options = { timeZone: 'America/Bogota' };
+          const formattedDates = datesList.map((d: Date, i: number) => `${i + 1}. ${d.toLocaleDateString('es-CO', options)} a las ${d.toLocaleTimeString('es-CO', options)}`).join('\n');
 
           const finalPhone = '573015085806'; 
           const message = encodeURIComponent(`🚨 *Alerta de Colegio*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su llegada tarde número ${totalLateInPeriod} en el Periodo ${currentPeriod}.\n\n*Historial de llegadas:*\n${formattedDates}`);
