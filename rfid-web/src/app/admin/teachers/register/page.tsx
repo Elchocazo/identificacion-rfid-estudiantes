@@ -19,7 +19,8 @@ export default function RegisterTeacher() {
 
   useEffect(() => {
     const code = localStorage.getItem('schoolCode') || '';
-    if (!code) {
+    const userRole = localStorage.getItem('userRole');
+    if (!code || userRole !== 'admin') {
       router.push('/');
       return;
     }

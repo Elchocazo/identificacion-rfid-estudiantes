@@ -1,16 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeApp, getApps, deleteApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, collection, addDoc, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCPxk-FI1hYo3CrACV9NHl7uDgqcxVpHfM",
-  authDomain: "identificacion-alumnos-rfid.firebaseapp.com",
-  projectId: "identificacion-alumnos-rfid",
-  storageBucket: "identificacion-alumnos-rfid.firebasestorage.app",
-  messagingSenderId: "204674907895",
-  appId: "1:204674907895:web:a5f920c606e6e2d6821df2"
-};
+import { adminDb, adminAuth } from '@/lib/firebaseAdmin';
 
 export async function POST(request: Request) {
   try {
@@ -30,81 +19,58 @@ export async function POST(request: Request) {
       schoolId
     } = data;
 
-    if (!uid || !parentId || !schoolId) {
-      return NextResponse.json({ error: 'UID, Parent ID y School ID son requeridos' }, { status: 400 });
+    if (!uid || !firstName || !lastName || !idNumber || !schoolId) {
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
-    // 0. Crear una App de Firebase temporal exclusiva para este request (para no chocar sesiones)
-    const tempAppName = `TempApp_${Date.now()}_${Math.random()}`;
-    const tempApp = initializeApp(firebaseConfig, tempAppName);
-    const tempAuth = getAuth(tempApp);
-    const db = getFirestore(getApps()[0]); // Usar la base de datos principal
-
-    let parentPassword = parentId;
-    if (parentPassword.length < 6) parentPassword += "000000";
-
+    // 1. Crear usuario en Firebase Auth (Para el estudiante)
+    const email = `${idNumber}@colegio.com`;
+    let userRecord;
     try {
-      // 1. Crear el usuario del padre en Firebase Auth
-      const parentEmail = `${parentId}@${schoolId.toLowerCase()}.parent.school.com`;
-
-      try {
-        await createUserWithEmailAndPassword(tempAuth, parentEmail, parentPassword);
-      } catch (authError: any) {
-        if (authError.code !== 'auth/email-already-in-use') throw authError;
+      userRecord = await adminAuth.createUser({
+        email: email,
+        password: idNumber, // Contraseña por defecto es su número de ID
+        displayName: `${firstName} ${lastName}`
+      });
+    } catch (authError: any) {
+      if (authError.code === 'auth/email-already-exists') {
+        return NextResponse.json({ error: 'Ya existe un usuario con este documento.' }, { status: 400 });
       }
-
-      // 1.5 Crear el usuario del estudiante en Firebase Auth
-      const studentEmail = `${idNumber}@${schoolId.toLowerCase()}.student.school.com`;
-      let studentPassword = idNumber;
-      if (studentPassword.length < 6) studentPassword += "000000";
-
-      try {
-        await createUserWithEmailAndPassword(tempAuth, studentEmail, studentPassword);
-      } catch (authError: any) {
-        if (authError.code !== 'auth/email-already-in-use') throw authError;
-      }
-
-      // Limpiar la app temporal
-      await deleteApp(tempApp);
-    } catch (e) {
-      await deleteApp(tempApp);
-      throw e;
+      throw authError;
     }
 
-    // 2. Guardar el estudiante en Firestore
-    const studentsRef = collection(db, 'students');
-    const newStudent = await addDoc(studentsRef, {
-      uid,
-      idNumber, // Tarjeta de identidad del estudiante
-      name: `${firstName} ${lastName}`,
-      firstName,
-      lastName,
-      grade,
-      birthday,
-      photoUrl: photoUrl || 'https://via.placeholder.com/150', // placeholder si no hay foto
-      parentPhone,
-      parentName,
-      parentId,
-      petLevel: 1,
-      petPoints: 0,
-      createdAt: serverTimestamp(),
-      schoolId
+    // 2. Guardar el rol (student) y el acceso del padre (parent)
+    await adminDb.collection('user_roles').doc(userRecord.uid).set({
+      role: 'student',
+      schoolCode: schoolId
     });
 
-    // 3. Borrar de pending_registrations
+    // 3. Crear el documento del estudiante en Firestore
+    await adminDb.collection('students').add({
+      uid,
+      studentAuthId: userRecord.uid, // ID del estudiante para que pueda iniciar sesión
+      firstName,
+      lastName,
+      birthday: birthday || '',
+      photoUrl: photoUrl || '',
+      parentPhone: parentPhone || '',
+      parentName: parentName || '',
+      parentId: parentId || '',
+      idNumber,
+      grade,
+      schoolId,
+      createdAt: new Date()
+    });
+
+    // 4. Eliminar el registro pendiente
     if (pendingId) {
-      await deleteDoc(doc(db, 'pending_registrations', pendingId));
+      await adminDb.collection('pending_registrations').doc(pendingId).delete();
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Estudiante registrado correctamente', 
-      studentId: newStudent.id,
-      parentPassword: parentPassword // Devuelve la contraseña asignada por si se necesita
-    }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Estudiante registrado correctamente' });
 
   } catch (error: any) {
-    console.error('Error registrando estudiante:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    console.error('Error completo:', error);
+    return NextResponse.json({ error: 'Error interno del servidor', details: error.message }, { status: 500 });
   }
 }

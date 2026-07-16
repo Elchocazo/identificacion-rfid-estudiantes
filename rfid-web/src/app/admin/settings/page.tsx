@@ -12,7 +12,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const schoolCode = localStorage.getItem('schoolCode');
-    if (!schoolCode) {
+    const userRole = localStorage.getItem('userRole');
+    if (!schoolCode || userRole !== 'admin') {
       router.push('/');
       return;
     }

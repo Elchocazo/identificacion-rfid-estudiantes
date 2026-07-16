@@ -17,7 +17,8 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     const schoolCode = localStorage.getItem('schoolCode') || '';
-    if (!schoolCode) {
+    const userRole = localStorage.getItem('userRole');
+    if (!schoolCode || userRole !== 'teacher') {
       router.push('/');
       return;
     }

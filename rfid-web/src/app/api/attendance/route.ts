@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(request: Request) {
   try {
@@ -11,17 +10,15 @@ export async function POST(request: Request) {
     }
 
     // 1. Buscar si el UID corresponde a algún estudiante registrado en ese colegio
-    const studentsRef = collection(db, 'students');
-    const q = query(studentsRef, where('uid', '==', uid), where('schoolId', '==', schoolId));
-    const querySnapshot = await getDocs(q);
+    const studentsRef = adminDb.collection('students');
+    const querySnapshot = await studentsRef.where('uid', '==', uid).where('schoolId', '==', schoolId).get();
 
     if (querySnapshot.empty) {
-      // Tarjeta no registrada: la guardamos en registros pendientes para que el profesor pueda asignarla
-      const pendingRef = collection(db, 'pending_registrations');
-      await addDoc(pendingRef, {
+      // Tarjeta no registrada
+      await adminDb.collection('pending_registrations').add({
         uid,
         schoolId,
-        timestamp: serverTimestamp()
+        timestamp: new Date()
       });
       return NextResponse.json({ error: 'Tarjeta no registrada. Lista para ser asignada en el panel.' }, { status: 404 });
     }
@@ -30,31 +27,16 @@ export async function POST(request: Request) {
     const studentData = studentDoc.data();
     const studentId = studentDoc.id;
 
-    // 2. Determinar si es Entrada o Salida
-    // Buscamos el último registro de asistencia de hoy para este estudiante
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const attendanceRef = collection(db, 'attendance');
-    const attQuery = query(
-      attendanceRef,
-      where('studentId', '==', studentId)
-    );
-    const attSnapshot = await getDocs(attQuery);
-    const allRecords = attSnapshot.docs.map(d => d.data());
-    
     // Fetch settings to get currentPeriod
-    const settingsRef = doc(db, `schools/${schoolId}/settings`, 'general');
-    const settingsSnap = await getDoc(settingsRef);
-    const settingsData = settingsSnap.exists() ? settingsSnap.data() : {};
-    const currentPeriod = settingsData.currentPeriod ? settingsData.currentPeriod : 1;
-    const lateArrivalTimeStr = settingsData.lateArrivalTime || '07:00'; // Default a 07:00
+    const settingsRef = adminDb.collection('schools').doc(schoolId).collection('settings').doc('general');
+    const settingsSnap = await settingsRef.get();
+    const settingsData = settingsSnap.exists ? settingsSnap.data() : {};
+    const currentPeriod = settingsData?.currentPeriod ? settingsData.currentPeriod : 1;
+    const lateArrivalTimeStr = settingsData?.lateArrivalTime || '07:00'; 
     
     const [lateHour, lateMinute] = lateArrivalTimeStr.split(':').map(Number);
-
     const nowBogota = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Bogota"}));
     
-    // Comparar horas y minutos
     let isLate = false;
     if (nowBogota.getHours() > lateHour) {
       isLate = true;
@@ -62,18 +44,13 @@ export async function POST(request: Request) {
       isLate = true;
     }
     
-    // Simplificación: Eliminamos el concepto de "Salida" por petición del usuario.
-    // Todas las lecturas serán "Entrada" para evitar el problema de que a los estudiantes se les olvide.
-    // (En una versión final podríamos limitar a 1 entrada por día, pero por ahora lo dejamos libre para que puedas probar el WhatsApp escaneando 3 veces seguidas).
-    let type = 'Entrada';
-
     // 3. Registrar la asistencia
-    await addDoc(attendanceRef, {
+    await adminDb.collection('attendance').add({
       studentId,
       uid,
       schoolId,
       type: 'Entrada',
-      timestamp: serverTimestamp(),
+      timestamp: new Date(),
       studentName: `${studentData.firstName} ${studentData.lastName}`,
       studentGrade: studentData.grade || '',
       period: currentPeriod,
@@ -94,21 +71,25 @@ export async function POST(request: Request) {
 
     // Comprobar Llegadas Tardes en el Periodo Actual
     if (isLate) {
-      // Filtrar registros pasados de este estudiante que fueron tarde y en el periodo actual
-      const pastLateRecords = allRecords.filter(r => r.period === currentPeriod && r.isLate === true);
+      // Buscar todas las llegadas tardes de este estudiante en este periodo
+      const lateRecordsSnap = await adminDb.collection('attendance')
+        .where('studentId', '==', studentId)
+        .where('period', '==', currentPeriod)
+        .where('isLate', '==', true)
+        .get();
+        
+      const pastLateRecords = lateRecordsSnap.docs.map(d => d.data());
       
-      const totalLateInPeriod = pastLateRecords.length + 1; // +1 por la llegada de hoy
-      lateArrivals = totalLateInPeriod; // Actualizamos el número de llegadas tardes en el doc del estudiante (informativo)
+      const totalLateInPeriod = pastLateRecords.length; // Ya incluye la de hoy porque acabamos de guardarla
+      lateArrivals = totalLateInPeriod; 
       
       // Enviar WhatsApp al llegar a 3 tardes en el periodo
       if (totalLateInPeriod === 3) {
         try {
-          const datesList = [...pastLateRecords.map(r => r.timestamp?.toMillis ? new Date(r.timestamp.toMillis()) : nowBogota)];
-          datesList.push(nowBogota); // añadir la llegada actual
-          
+          const datesList = pastLateRecords.map(r => r.timestamp && r.timestamp.toDate ? r.timestamp.toDate() : nowBogota);
           datesList.sort((a, b) => a.getTime() - b.getTime()); // ordenar cronológicamente
           
-          const formattedDates = datesList.map((d, i) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
+          const formattedDates = datesList.map((d: Date, i: number) => `${i + 1}. ${d.toLocaleDateString('es-CO')} a las ${d.toLocaleTimeString('es-CO')}`).join('\n');
 
           const finalPhone = '573015085806'; 
           const message = encodeURIComponent(`🚨 *Alerta de Colegio*\n\nEstimado Coordinador,\nLe informamos que el estudiante *${studentData.firstName} ${studentData.lastName}* ha acumulado su tercera llegada tarde en el Periodo ${currentPeriod}.\n\n*Historial de llegadas:*\n${formattedDates}`);
@@ -121,18 +102,18 @@ export async function POST(request: Request) {
       }
     }
 
-    // Actualizar estudiante
-    await updateDoc(doc(db, 'students', studentId), {
+    // Actualizar estudiante usando adminDb
+    await adminDb.collection('students').doc(studentId).update({
       petPoints,
       petLevel,
       lateArrivals,
-      lastAttendance: serverTimestamp()
+      lastAttendance: new Date()
     });
 
     return NextResponse.json({ 
       success: true, 
       message: 'Asistencia registrada', 
-      type, 
+      type: 'Entrada', 
       student: `${studentData.firstName} ${studentData.lastName}`,
       petLevel,
       lateArrivals
