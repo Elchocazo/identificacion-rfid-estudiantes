@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { collection, onSnapshot, query, where, orderBy, limit, doc, setDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 
@@ -11,6 +12,12 @@ export default function TeacherDashboard() {
   const [attendances, setAttendances] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = '/';
+  };
 
   // Configuraciones globales para el header
   const [settings, setSettings] = useState({ schoolName: 'Colegio Hogar Madre de Dios', currentPeriod: 1 });
@@ -111,7 +118,7 @@ export default function TeacherDashboard() {
           </button>
           <button className="btn-secondary" onClick={() => router.push('/teacher/settings')} title="Configuración">⚙️</button>
           <button className="btn-primary" onClick={() => router.push('/teacher/register')}>➕ Agregar Estudiante</button>
-          <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
+          <button className="btn-secondary" onClick={handleLogout}>Cerrar Sesión</button>
         </div>
       </header>
 
