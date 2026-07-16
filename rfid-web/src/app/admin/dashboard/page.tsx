@@ -121,6 +121,12 @@ export default function AdminDashboard() {
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>Registrar alumno nuevo</span>
         </button>
 
+        <button className="glass-panel" onClick={() => router.push('/admin/settings')} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'transform 0.2s', border: '2px solid #8b5cf6' }}>
+          <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏫</span>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>Configuración Colegio</strong>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>Hora de llegada, nombre, periodo</span>
+        </button>
+
         <button className="glass-panel" onClick={handleExportExcel} disabled={isExporting} style={{ cursor: isExporting ? 'wait' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'transform 0.2s', border: '2px solid #10b981', opacity: isExporting ? 0.7 : 1 }}>
           <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{isExporting ? '⏳' : '📊'}</span>
           <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{isExporting ? 'Generando...' : 'Descargar Reporte'}</strong>

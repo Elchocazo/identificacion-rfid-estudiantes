@@ -42,7 +42,7 @@ export default function SettingsPage() {
     try {
       await setDoc(doc(db, `schools/${schoolCode}/settings`, 'general'), settings, { merge: true });
       alert('¡Configuración guardada exitosamente!');
-      router.push('/teacher/dashboard');
+      router.push('/admin/dashboard');
     } catch (e) {
       alert('Error guardando la configuración');
     } finally {
@@ -55,7 +55,7 @@ export default function SettingsPage() {
       <header style={{ marginBottom: '3rem' }}>
         <h1 className="text-gradient" style={{ margin: '0 0 1rem 0', fontSize: '2.5rem' }}>Configuración Global</h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <button onClick={() => router.push('/teacher/dashboard')} className="btn-secondary">
+          <button onClick={() => router.push('/admin/dashboard')} className="btn-secondary">
             ← Volver
           </button>
           <button onClick={() => router.push('/settings')} className="btn-secondary" style={{ background: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}>
