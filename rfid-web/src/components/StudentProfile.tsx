@@ -52,11 +52,6 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
 
   const handleChangePassword = async () => {
     if (!isAdmin) return;
-    const studentAuthId = student?.studentAuthId;
-    if (!studentAuthId) {
-      alert("Este estudiante no tiene una cuenta de inicio de sesión asociada.");
-      return;
-    }
 
     const newPassword = prompt("Ingresa la nueva contraseña para el estudiante (mínimo 6 caracteres):");
     if (!newPassword) return; // User cancelled
@@ -70,11 +65,21 @@ export default function StudentProfile({ studentId, isAdmin }: StudentProfilePro
       const res = await fetch('/api/users/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUid: studentAuthId, newPassword })
+        body: JSON.stringify({ 
+          targetUid: student?.studentAuthId, 
+          newPassword,
+          // Pasamos estos datos extras por si el estudiante es antiguo y no tiene cuenta Auth
+          firestoreStudentId: student.id,
+          idNumber: student.idNumber,
+          schoolId: student.schoolId
+        })
       });
       const data = await res.json();
       if (data.success) {
         alert("Contraseña cambiada exitosamente.");
+        if (data.createdAuth && student) {
+           setStudent({...student, studentAuthId: data.uid});
+        }
       } else {
         alert("Error al cambiar contraseña: " + data.error);
       }
