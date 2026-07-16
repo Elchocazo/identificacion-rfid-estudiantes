@@ -102,15 +102,32 @@ export default function AdminDashboard() {
           <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{settings.schoolName} - Periodo {settings.currentPeriod}</span>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button className="btn-secondary" onClick={handleExportExcel} disabled={isExporting} style={{ background: isExporting ? '#6ee7b7' : '#10b981', color: 'white', borderColor: isExporting ? '#6ee7b7' : '#10b981' }}>
-            {isExporting ? '⏳ Generando...' : '📊 Descargar Excel'}
-          </button>
           <button className="btn-secondary" onClick={() => router.push('/settings')} title="Configuración de Cuenta">⚙️ Configuración</button>
-          <button className="btn-primary" onClick={() => router.push('/admin/teachers/register')} style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>👨‍🏫 Gestión de Docentes</button>
-          <button className="btn-primary" onClick={() => router.push('/teacher/register')}>➕ Agregar Estudiante</button>
           <button className="btn-secondary" onClick={() => window.location.href='/'}>Cerrar Sesión</button>
         </div>
       </header>
+
+      {/* Acciones Rápidas */}
+      <section style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <button className="glass-panel" onClick={() => router.push('/admin/teachers/register')} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'transform 0.2s', border: '2px solid var(--accent)' }}>
+          <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👨‍🏫</span>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>Gestión de Docentes</strong>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>Administrar accesos de profesores</span>
+        </button>
+
+        <button className="glass-panel" onClick={() => router.push('/teacher/register')} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'transform 0.2s', border: '2px solid var(--primary)' }}>
+          <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>➕</span>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>Agregar Estudiante</strong>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>Registrar alumno nuevo</span>
+        </button>
+
+        <button className="glass-panel" onClick={handleExportExcel} disabled={isExporting} style={{ cursor: isExporting ? 'wait' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'transform 0.2s', border: '2px solid #10b981', opacity: isExporting ? 0.7 : 1 }}>
+          <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{isExporting ? '⏳' : '📊'}</span>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{isExporting ? 'Generando...' : 'Descargar Reporte'}</strong>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>Exportar asistencia a Excel</span>
+        </button>
+      </section>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         {/* Feed de Asistencia */}
